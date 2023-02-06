@@ -12,11 +12,17 @@
     {% for account in accounts %}
     <tr>
         <td>{{ account.name }}</td>
-        <td>{{ account.balance }}</td>
+        {% load humanize %}
+        <td>{{ account.balance|intcomma }}</td>
         <td><a href="{% url 'edit_account' account.id %}">Edit</a></td>  
         <td><a href="{% url 'delete_account' account.id %}">Delete</a></td>
     </tr>
-{% endfor %}
+
+    {% endfor %}
+    <tr>
+        <td><strong>Total:</strong></td>
+        <td><strong>{{ total_amount|floatformat:2|intcomma }}</strong></td>
+    </tr>
 </table>
 </ul>
 {% endblock %}

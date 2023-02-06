@@ -262,7 +262,8 @@ def create_account(request):
 @login_required
 def view_accounts(request):
     accounts = Account.objects.filter(user=request.user)
-    return render(request, 'finances/view_accounts.html', {'accounts': accounts})
+    total_amount = accounts.aggregate(Sum('balance'))['balance__sum'] or 0
+    return render(request, 'finances/view_accounts.html', {'accounts': accounts, 'total_amount': total_amount})
 
 #Edit account#
 @login_required
