@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Delete Transaction</h1>
+<p>Are you sure you want to delete the following transaction?</p>
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>Account</th>
+        <th>Category</th>
+    </tr>
+    <tr>
+        <td>{{ transaction.date }}</td>
+        <td>{{ transaction.description }}</td>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.account.name }}</td>
+        <td>{{ transaction.category.name }}</td>
+    </tr>
+</table>
+<form action="" method="post">
+    {% csrf_token %}
+    <input type="submit" value="Delete">
+</form>
+{% endblock %}

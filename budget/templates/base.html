@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% load static %}
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" /> 
+  <link rel="stylesheet" type="text/css" href="{% static '/css/main.css' %}">
+</head>
+<body>
+  <div class="wrapper">
+    <!--Top menu -->
+    <div class="sidebar">
+       <!--profile image & text-->
+       <div class="profile">
+          <img src="{% static '/img/test.jpg' %}" alt="profile_picture">
+          <h3>{{ user.first_name }} {{user.last_name}}</h3>
+        </div>
+        <!--menu item-->
+        <ul>
+          <li>
+              <a href="#" class="has-submenu">
+                  <span class="has-submenu icon"><i class="fas fa-home"></i></span>
+                  <span class="has-submenu item">Categories</span>
+              </a>
+              <ul class="submenu">
+                <li><a href="{% url 'view_categories' %}">View All Categories</a></li>
+                <li><a href="{% url 'create_category' %}">Create Category</a></li>
+              </ul>  
+          </li>
+          <li>
+              <a href="#" class="has-submenu">
+                  <span class="has-submenu icon"><i class="fas fa-home"></i></span>
+                  <span class="has-submenu item">Accounts</span>
+              </a>
+              <ul class="submenu">
+                <li><a href="{% url 'view_accounts' %}">View All Accounts</a></li>
+                <li><a href="{% url 'create_account' %}">Create Account</a></li>
+              </ul>  
+          </li>
+          <li>
+              <a href="#" class="has-submenu">
+                  <span class="has-submenu icon"><i class="fas fa-home"></i></span>
+                  <span class="has-submenu item">Transactions</span>
+              </a>
+              <ul class="submenu">
+                <li><a href="{% url 'transactions' %}">View All Transactions</a></li>
+                <li><a href="{% url 'add_transaction' %}">Create Transaction</a></li>
+              </ul>  
+          </li>
+          <li>
+              <a href="#">
+                  <span class="icon"><i class="fas fa-tachometer-alt"></i></span>
+                  <span class="item">Perfomance</span>
+              </a>
+          </li>
+          <li>
+              <a href="#">
+                  <span class="icon"><i class="fas fa-database"></i></span>
+                  <span class="item">Development</span>
+              </a>
+          </li>
+          <li>
+              <a href="#">
+                  <span class="icon"><i class="fas fa-chart-line"></i></span>
+                  <span class="item">Reports</span>
+              </a>
+          </li>
+          <li>
+              <a href="#">
+                  <span class="icon"><i class="fas fa-user-shield"></i></span>
+                  <span class="item">Admin</span>
+              </a>
+          </li>
+          <li>
+              <a href="#">
+                  <span class="icon"><i class="fas fa-cog"></i></span>
+                  <span class="item">Settings</span>
+              </a>
+          </li>
+        </ul>
+    </div>
+    <div class="section">
+      <div class="top_navbar">
+          <div class="hamburger">
+              <a href="#">
+                  <i class="fas fa-bars"></i>
+              </a>
+          </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+  <!--<header>
+    <nav>
+      <ul>
+        <li><a href="{% url 'create_category' %}">Create Category</a></li>
+        <li><a href="{% url 'view_categories' %}">View Categories</a></li>
+        <li><a href="{% url 'add_transaction' %}">Create Transaction</a></li>
+      </ul>
+    </nav>
+  </header>-->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>&copy; {{ year }}</p>
+  </footer>
+</body>
+</html>
+
+<script>
+  var hamburger = document.querySelector(".hamburger");
+    hamburger.addEventListener("click", function(){
+        document.querySelector("body").classList.toggle("active");
+    })
+
+  // $('.has-submenu').click(function () {
+  //   $('.submenu').toggleClass('show-submenu');
+  // });
+  
+</script>
+<script>
+// function toggleSubmenu(event) {
+//   let currentSubmenu = event.currentTarget.nextElementSibling;
+//   let allSubmenus = document.querySelectorAll(".submenu");
+//   for (let i = 0; i < allSubmenus.length; i++) {
+//     allSubmenus[i].style.display = "none";
+//     allSubmenus[i].classList.remove("active");
+//   }
+//   currentSubmenu.style.display = "block";
+//   currentSubmenu.classList.add("active");
+// }
+
+</script>
+

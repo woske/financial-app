@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ user.username }}'s Profile</h1>
+  {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+  {% endif %}
+
+  <h2>Update Profile</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form_user.as_p }}
+    <input type="submit" name="update_profile" value="Update Profile">
+  </form>
+
+  <h2 style="margin-top: 30px">Change Password</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form_password.as_p }}
+    <input type="submit" name="change_password" value="Change Password">
+  </form>
+{% endblock %}

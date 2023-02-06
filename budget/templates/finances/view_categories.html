@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Categories</h1>
+<table>
+    <tr>
+        <th>Category Name</th>
+        <th>Category Description</th>
+        <th>Monthly Budget</th>
+        <th>Edit</th>
+        <th>Delete</th>
+    </tr>
+{% for category in categories %}
+    <tr>
+        <td>{{ category.name }}</td>
+        <td>{{ category.description }}</td>
+        <td>{{ category.monthly_budget }}</td>
+        <td><a href="{% url 'edit_category' category.id %}">Edit</a></td>  
+        <td><a href="{% url 'delete_category' category.id %}">Delete</a></td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}
