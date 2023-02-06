@@ -22,8 +22,9 @@
     {% for category, spend in data.items %}
     {% if spend != 0 %}
     <tr>
+      {% load humanize %}
       <td>{{ category }}</td>
-      <td>{{ spend }}</td>
+      <td>${{ spend|floatformat:2|intcomma }}</td>
     </tr>
     {% endif %}
     {% endfor %}
