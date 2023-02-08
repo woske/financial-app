@@ -2,9 +2,9 @@
 
 {% block content %}
 <h1>Accounts</h1>
-<form action="{% url 'recalculate_balances' %}" method="post">
+<form class="recalculate" action="{% url 'recalculate_balances' %}" method="post">
     {% csrf_token %}
-    <input type="submit" value="Recalculate Balances">
+    <input class="recalculate_input" type="submit" value="Recalculate Balances">
 </form>
 <table>
     <tr>

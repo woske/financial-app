@@ -240,3 +240,34 @@ p.error {
     color: red;
     text-align: center;
 }
+a.button_delete {
+    width: 100%;
+    display: block;
+    text-align: center;
+    padding: 10px;
+    margin-top: 20px;
+    border-radius: 5px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+form.recalculate {
+    width: 500px;
+    margin: 0 auto;
+    margin-bottom: 35px;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 2px 2px 5px #ccc;
+}
+input.recalculate_input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 0;
+    border-radius: 5px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}

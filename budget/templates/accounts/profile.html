@@ -24,9 +24,9 @@
     <input type="submit" name="change_password" value="Change Password">
   </form>
 
-  <h2 style="margin-top: 30px">Delete Account</h2>
-  <form method="post">
-    {% csrf_token %}
-    <input type="submit" name="delete_account" value="Delete Account">
+  <h2 style="margin-top: 30px">Delete Account and All Data</h2>
+  <form>
+    <a href="{% url 'delete_user' %}" class="button_delete">Delete Account</a>
   </form>
+  
 {% endblock %}
