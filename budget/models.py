@@ -22,8 +22,9 @@ class Account(models.Model):
 
     def update_balance(self):
         transactions = Transaction.objects.filter(account=self)
-        total = sum(t.amount for t in transactions)
-        self.balance = total
+        credits = sum(t.amount for t in transactions if t.amount > 0)
+        debits = abs(sum(t.amount for t in transactions if t.amount < 0))
+        self.balance = credits - debits
         self.save()
 
 class Transaction(models.Model):

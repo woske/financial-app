@@ -14,6 +14,8 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import messages
+import decimal
+from decimal import Decimal
 
 #Login System#
 def login_view(request):
@@ -46,7 +48,7 @@ def register(request):
             User.objects.create_user(username=username, first_name=first_name, last_name=last_name, email=email, password=password)
             user = authenticate(request, username=username, password=password)
             login(request, user)
-            return redirect('')
+            return redirect('dashboard')
         else:
             return render(request, 'register.html', {'error': 'Passwords do not match'})
     else:
@@ -74,11 +76,27 @@ def profile(request):
                 return redirect('profile')
             else:
                 messages.error(request, 'Please correct the error below.')
+        elif 'delete_user' in request.POST:
+            user = request.user
+            user.delete()
+            messages.success(request, 'Account deleted successfully.')
+            return redirect('dashboard')
     else:
         form_user = UserChangeForm(instance=request.user)
         form_password = PasswordChangeForm(request.user)
     return render(request, 'accounts/profile.html', {'form_user': form_user, 'form_password': form_password, 'user': request.user})
 
+@login_required
+def delete_user(request):
+    if request.method == 'POST':
+        # Delete all transactions, categories, and accounts linked to the user
+        Transaction.objects.filter(user=request.user).delete()
+        Category.objects.filter(user=request.user).delete()
+        Account.objects.filter(user=request.user).delete()
+        # Delete the user account
+        request.user.delete()
+        return redirect('dashboard')
+    return render(request, 'accounts/delete_user.html')
 
 
 
@@ -265,6 +283,14 @@ def view_accounts(request):
     total_amount = accounts.aggregate(Sum('balance'))['balance__sum'] or 0
     return render(request, 'finances/view_accounts.html', {'accounts': accounts, 'total_amount': total_amount})
 
+@login_required
+def recalculate_balances(request):
+    accounts = Account.objects.filter(user=request.user)
+    for account in accounts:
+        account.update_balance()
+    return redirect('view_accounts')
+
+
 #Edit account#
 @login_required
 def edit_account(request, pk):
@@ -358,6 +384,10 @@ def import_expenses(request):
             headers = next(reader)
             for row in reader:
                 account, date, description, category, amount = row
+                try:
+                    amount = Decimal(amount.strip().replace(',', ''))
+                except decimal.InvalidOperation:
+                    continue  # skip this row if the amount cannot be converted
                 category, _ = Category.objects.get_or_create(
                     name=category,
                     user=request.user

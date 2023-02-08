@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from .views import add_transaction, view_transactions, analyze_transactions, create_category, view_categories, import_expenses, register, create_account, view_accounts, edit_transaction, remove_transaction, edit_category, delete_category, edit_account, delete_account
-from .views import view_monthly_transactions, profile, dashboard,login_view
+from .views import view_monthly_transactions, profile, dashboard,login_view, recalculate_balances, delete_user
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
@@ -40,5 +40,7 @@ urlpatterns = [
     path('accounts/', view_accounts, name='view_accounts'),
     path('budgets/', view_monthly_transactions, name='view_monthly_transactions'),
     path('profile/', profile, name='profile'),
+    path('recalculate_balances/', recalculate_balances, name='recalculate_balances'),
+    path('profile/delete_user/', delete_user, name='delete_user'),
     path('admin/', admin.site.urls)
 ]
