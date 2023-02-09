@@ -4,7 +4,7 @@ from .models import Transaction, Category, Account
 from django.contrib.auth.decorators import login_required
 from .helpers import analyze_transactions
 from .forms import TransactionForm, CategoryForm, ImportExpensesForm, AccountForm, UserChangeForm
-import csv, datetime
+import csv, datetime, decimal, json
 from django.db.models import Sum
 import plotly.express as px
 import plotly.offline as pyo
@@ -14,7 +14,6 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import messages
-import decimal
 from decimal import Decimal
 
 #Login System#
@@ -378,10 +377,6 @@ def view_monthly_transactions(request):
     years = range(2018, current_year + 1)
 
     return render(request, 'finances/view_monthly_transactions.html', {'expenses': expenses, 'income': income, 'months': months, 'selected_year': selected_year, 'years': years})
-
-
-
-
 
 
 
