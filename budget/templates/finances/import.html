@@ -3,6 +3,13 @@
 {% block content %}
 
 <!-- templates/finances/import.html -->
+<h2>Import a CSV Document of your transactions</h2>
+<div class="centered">
+    <p>You need to follow the following structure for the column: Account, Date (Y-M-D), Description, Category, Amount</p>
+</div>
+<div class="centered">
+    <a class="button" href="#">Click here for an example</a>
+</div>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}

@@ -2,39 +2,63 @@
 
 {% block content %}
 <form method="get">
-    <label for="year">Year:</label>
-    <select id="year" name="year">
-      {% for year in years %}
-      <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+  <label for="year">Year:</label>
+  <select id="year" name="year">
+    {% for year in years %}
+    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Go</button>
+</form>
+
+<h2 style="text-align: left;">Expenses {{selected_year}}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      {% for month in months.values %}
+      <th>{{ month }}</th>
       {% endfor %}
-    </select>
-    <button type="submit">Go</button>
-  </form>
-  
-  <table>
-    <thead>
-      <tr>
-        <th></th>
-        {% for month in months.values %}
-        <th>{{ month }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for category, month_data in data.items %}
-      <tr>
-        <td>{{ category }}</td>
-        {% for month, item in month_data.items %}
-        <td>
-            Budget: {{ item.budget|floatformat:2 }}<br>
-            Spent: {{ item.spent|floatformat:2 }}<br>
-            Difference: {{ item.difference|floatformat:2 }}
-        </td>
-        {% endfor %}
-      </tr>
+    </tr>
+  </thead>
+  <tbody>
+    {% for category, month_data in expenses.items %}
+    <tr>
+      <td>{{ category }}</td>
+      {% for month, item in month_data.items %}
+      <td{% if item.spent > item.budget %} style="color: red;"{% elif item.spent < item.budget %} style="color: green;"{% endif %}>{{ item.spent|floatformat:2 }} (Budget: {{ item.budget|floatformat:2 }})</td>
       {% endfor %}
-    </tbody>
-  </table>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2 style="text-align: left;">Income {{selected_year}}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Caregory</th>
+      {% for month in months.values %}
+      <th>{{ month }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for category, month_data in income.items %}
+    <tr>
+      <td>{{ category }}</td>
+      {% for month, item in month_data.items %}
+        {% if month in month_data %}
+          <td{% if item.spent > item.budget %} style="color: red;"{% elif item.spent < item.budget %} style="color: green;"{% endif %}>{{ item.spent|floatformat:2 }} (Budget: {{ item.budget|floatformat:2 }})</td>
+        {% else %}
+          <td></td>
+        {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
   
   {% endblock %}

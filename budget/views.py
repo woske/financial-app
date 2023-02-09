@@ -32,7 +32,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect('dashboard')
 
 def register(request):
     if request.method == 'POST':
@@ -318,16 +318,21 @@ def delete_account(request, pk):
 
 
 ###### BUDGETS ######
+@login_required
 def view_monthly_transactions(request):
-    categories = Category.objects.filter(user=request.user)
-    transactions = Transaction.objects.filter(user=request.user)
+    categories = Category.objects.filter(user=request.user).exclude(name="[Transfer]")
+    transactions = Transaction.objects.filter(user=request.user).exclude(category__name="[Transfer]")
 
     year = request.GET.get('year')
-    selected_year = year if year else None
+    selected_year = year if year else datetime.datetime.now().year
     if year:
         transactions = transactions.filter(date__year=year)
+    else:
+        transactions = transactions.filter(date__year=selected_year)
 
     transactions_by_month_and_category = transactions.values('category__name', 'date__month').annotate(spent=Sum('amount'))
+
+    
 
     months = {
         1: 'January',
@@ -344,27 +349,36 @@ def view_monthly_transactions(request):
         12: 'December',
     }
 
-    data = {}
+    expenses = {}
+    income = {}
     for transaction in transactions_by_month_and_category:
         category = transaction['category__name']
         month = months[transaction['date__month']]
-        budget = Category.objects.get(name=category).monthly_budget
         spent = transaction['spent']
-        difference = spent - budget
+        category_budget = categories.get(name=category).monthly_budget
 
-        if category not in data:
-            data[category] = {}
-        
-        
-        data[category][month] = {
-            'budget': budget,
-            'spent': spent,
-            'difference': difference,
-            'years': range(2010, 2023),
-            'selected_year': selected_year,
-        }
+        if spent < 0:
+            if category not in expenses:
+                expenses[category] = {}
+            expenses[category][month] = {
+                'spent': abs(spent),
+                'budget': category_budget,
+                'difference': abs(spent) - category_budget,
+            }
+        else:
+            if category not in income:
+                income[category] = {}
+            income[category][month] = {
+                'spent': spent,
+                'budget': category_budget,
+                'difference': spent - category_budget,
+            }
 
-    return render(request, 'finances/view_monthly_transactions.html', {'data': data, 'months': months})
+    current_year = datetime.datetime.now().year
+    years = range(2018, current_year + 1)
+
+    return render(request, 'finances/view_monthly_transactions.html', {'expenses': expenses, 'income': income, 'months': months, 'selected_year': selected_year, 'years': years})
+
 
 
 

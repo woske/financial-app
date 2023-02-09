@@ -20,46 +20,48 @@
        <div class="profile">
           <img src="{% static '/img/test.jpg' %}" alt="profile_picture">
           <h3>{{ user.first_name }} {{user.last_name}}</h3>
+          <a style="text-align:center; color:white;text-decoration: underline;"href="{% url 'logout'%}">Log out</a>
         </div>
         <!--menu item-->
         <ul>
           <li>
-              <a href="#" class="has-submenu">
+              <a class="has-submenu">
                   <span class="has-submenu icon"><i class="fas fa-home"></i></span>
                   <span class="has-submenu item">Categories</span>
               </a>
               <ul class="submenu">
-                <li><a href="{% url 'view_categories' %}">View All Categories</a></li>
-                <li><a href="{% url 'create_category' %}">Create Category</a></li>
+                <li><a class="subitem" href="{% url 'view_categories' %}">All Categories</a></li>
+                <li><a class="subitem" href="{% url 'create_category' %}">Create Category</a></li>
               </ul>  
           </li>
           <li>
-              <a href="#" class="has-submenu">
+              <a class="has-submenu">
                   <span class="has-submenu icon"><i class="fas fa-home"></i></span>
                   <span class="has-submenu item">Accounts</span>
               </a>
               <ul class="submenu">
-                <li><a href="{% url 'view_accounts' %}">View All Accounts</a></li>
-                <li><a href="{% url 'create_account' %}">Create Account</a></li>
+                <li><a class="subitem" href="{% url 'view_accounts' %}">All Accounts</a></li>
+                <li><a class="subitem" href="{% url 'create_account' %}">Create Account</a></li>
               </ul>  
           </li>
           <li>
-              <a href="#" class="has-submenu">
+              <a class="has-submenu">
                   <span class="has-submenu icon"><i class="fas fa-home"></i></span>
                   <span class="has-submenu item">Transactions</span>
               </a>
               <ul class="submenu">
-                <li><a href="{% url 'transactions' %}">View All Transactions</a></li>
-                <li><a href="{% url 'add_transaction' %}">Create Transaction</a></li>
+                <li><a class="subitem" href="{% url 'transactions' %}">All Transactions</a></li>
+                <li><a class="subitem" href="{% url 'add_transaction' %}">Add Transaction</a></li>
+                <li><a class="subitem" href="{% url 'import_expenses' %}">Import Transaction</a></li>
               </ul>  
           </li>
           <li>
-              <a href="#">
-                  <span class="icon"><i class="fas fa-tachometer-alt"></i></span>
-                  <span class="item">Perfomance</span>
+              <a href="{% url 'profile' %}" class="has-submenu">
+                  <span class="has-submenu icon"><i class="fas fa-cog"></i></span>
+                  <span class="has-submenu item">Settings</span>
               </a>
           </li>
-          <li>
+          <!--<li>
               <a href="#">
                   <span class="icon"><i class="fas fa-database"></i></span>
                   <span class="item">Development</span>
@@ -82,7 +84,7 @@
                   <span class="icon"><i class="fas fa-cog"></i></span>
                   <span class="item">Settings</span>
               </a>
-          </li>
+          </li>-->
         </ul>
     </div>
     <div class="section">
