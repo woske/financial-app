@@ -26,7 +26,7 @@ class TransactionForm(forms.ModelForm):
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ['name', 'description', 'monthly_budget']
+        fields = ['name', 'monthly_budget']
 
 class AccountForm(forms.ModelForm):
     class Meta:

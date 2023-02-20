@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Forex Trend Tracker</h1>
+    <p>Win %: {{ win_pct }}</p>
+    <p>Loss  %: {{ loss_pct }}</p>
+    <p>Total Profit/Loss: {{ total_profit_loss }}</p>
+
+    <div class="row">
+        <div id="bar-chart"></div>
+        <div class="col-md-4">
+            <h3>Trade Log</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Entry Price</th>
+                        <th>Exit Price</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trade in trades %}
+                        {% if trade.trade_result == 'Win' %}
+                            <tr style="background-color: #00800052;">
+                                <td>{{ trade.entry_price }}</td>
+                                <td>{{ trade.exit_price }}</td>
+                                <td>{{ trade.trade_result }}</td>
+                            </tr>
+                        {% else %}
+                            <tr style="background-color: #ff00004a;">
+                                <td>{{ trade.entry_price }}</td>
+                                <td>{{ trade.exit_price }}</td>
+                                <td>{{ trade.trade_result }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+  var chartData = JSON.parse('{{ graphJSON|escapejs }}');
+  Plotly.newPlot("bar-chart", chartData.data, chartData.layout);
+</script>
+
+
+
+ 
+{% endblock %}

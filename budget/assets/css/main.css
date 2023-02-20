@@ -22,6 +22,7 @@ body{
     height: 100%;
     padding: 20px 0;
     transition: all 0.5s ease;
+    overflow: auto;
 }
 .wrapper .sidebar .profile{
     margin-bottom: 30px;
@@ -119,6 +120,8 @@ body.active .wrapper .section{
 a.subitem {
     padding: 5px 35px!important;
 }
+
+  
 
 
 

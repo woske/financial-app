@@ -4,10 +4,11 @@ from .models import Transaction, Category, Account
 from django.contrib.auth.decorators import login_required
 from .helpers import analyze_transactions
 from .forms import TransactionForm, CategoryForm, ImportExpensesForm, AccountForm, UserChangeForm
-import csv, datetime, decimal, json
+import csv, datetime, decimal, json, plotly, urllib, base64, io
 from django.db.models import Sum
 import plotly.express as px
 import plotly.offline as pyo
+import plotly.graph_objects as go
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
@@ -15,6 +16,9 @@ from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import messages
 from decimal import Decimal
+import yfinance as yf
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Login System#
 def login_view(request):
@@ -318,7 +322,7 @@ def delete_account(request, pk):
 
 ###### BUDGETS ######
 @login_required
-def view_monthly_transactions(request):
+def budget_yearly(request):
     categories = Category.objects.filter(user=request.user).exclude(name="[Transfer]")
     transactions = Transaction.objects.filter(user=request.user).exclude(category__name="[Transfer]")
 
@@ -329,9 +333,8 @@ def view_monthly_transactions(request):
     else:
         transactions = transactions.filter(date__year=selected_year)
 
-    transactions_by_month_and_category = transactions.values('category__name', 'date__month').annotate(spent=Sum('amount'))
 
-    
+    transactions_by_month_and_category = transactions.values('category__name', 'date__month').annotate(spent=Sum('amount'))
 
     months = {
         1: 'January',
@@ -373,10 +376,104 @@ def view_monthly_transactions(request):
                 'difference': spent - category_budget,
             }
 
+    chart_data = {}
+    for transaction in transactions_by_month_and_category:
+        category = transaction['category__name']
+        spent = transaction['spent']
+        category_budget = categories.get(name=category).monthly_budget
+        chart_data[category] = {
+            'budget': category_budget,
+            'spent': abs(spent),
+            'difference': category_budget - abs(spent),
+        }
+
+    
     current_year = datetime.datetime.now().year
     years = range(2018, current_year + 1)
 
-    return render(request, 'finances/view_monthly_transactions.html', {'expenses': expenses, 'income': income, 'months': months, 'selected_year': selected_year, 'years': years})
+    return render(request, 'finances/budgets_yearly.html', {'expenses': expenses, 'income': income, 'months': months, 'selected_year': selected_year, 'years': years})
+
+
+@login_required
+def budget_monthly(request):
+    categories = Category.objects.filter(user=request.user).exclude(name="[Transfer]")
+    transactions = Transaction.objects.filter(user=request.user).exclude(category__name="[Transfer]")
+
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    selected_year = year if year else datetime.datetime.now().year
+    if year:
+        transactions = transactions.filter(date__year=year)
+    else:
+        transactions = transactions.filter(date__year=selected_year)
+
+    selected_month = month if month else datetime.datetime.now().month
+    if month:
+        transactions = transactions.filter(date__month=month)
+    else:
+        transactions = transactions.filter(date__month=selected_month)
+
+    transactions_by_month_and_category = transactions.values('category__name', 'date__month').annotate(spent=Sum('amount'))
+
+    months = {
+        1: 'January',
+        2: 'February',
+        3: 'March',
+        4: 'April',
+        5: 'May',
+        6: 'June',
+        7: 'July',
+        8: 'August',
+        9: 'September',
+        10: 'October',
+        11: 'November',
+        12: 'December',
+    }
+
+    expenses = {}
+    income = {}
+    for transaction in transactions_by_month_and_category:
+        category = transaction['category__name']
+        month = months[transaction['date__month']]
+        spent = transaction['spent']
+        category_budget = categories.get(name=category).monthly_budget
+
+        if spent < 0:
+            if category not in expenses:
+                expenses[category] = {}
+            expenses[category][month] = {
+                'spent': abs(spent),
+                'budget': category_budget,
+                'difference': abs(spent) - category_budget,
+            }
+        else:
+            if category not in income:
+                income[category] = {}
+            income[category][month] = {
+                'spent': spent,
+                'budget': category_budget,
+                'difference': spent - category_budget,
+            }
+
+    chart_data = {}
+    for transaction in transactions_by_month_and_category:
+        category = transaction['category__name']
+        spent = transaction['spent']
+        category_budget = categories.get(name=category).monthly_budget
+        chart_data[category] = {
+            'budget': category_budget,
+            'spent': abs(spent),
+            'difference': category_budget - abs(spent),
+        }
+
+    fig = px.bar(x=list(chart_data.keys()), y=[data['difference'] for data in chart_data.values()],
+                 labels={'x': 'Category', 'y': 'Difference'})
+    fig_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    current_year = datetime.datetime.now().year
+    years = range(2018, current_year + 1)
+
+    return render(request, 'finances/budgets_monthly.html', {'fig_json': fig_json, 'expenses': expenses, 'income': income, 'months': months, 'selected_month': selected_month, 'selected_year': selected_year, 'years': years})
 
 
 
@@ -475,3 +572,112 @@ def analyze_transactions(request):
 
 
 
+#####         TREND FOREX ##########
+@login_required
+def track_trend(request):
+    # Define the currency pair you want to trade
+    symbol = "EURUSD=X"
+
+    # Get historical Forex prices from yfinance
+    df = yf.download(symbol, interval="1d", period="1y")
+
+    # Calculate the moving average
+    df["ma_50"] = df["Close"].rolling(window=50).mean()
+
+    # Determine the trend based on the moving average
+    df["trend"] = np.where(df["Close"] > df["ma_50"], "bullish", "bearish")
+
+    # Backtest the strategy
+    investment = 100
+    total_profit_loss = 0
+    trades = []
+    for i in range(50, len(df)):
+        if df["trend"].iloc[i] == "bullish":
+            entry_price = df["Close"].iloc[i]
+            stop_loss = entry_price - 0.005
+            take_profit = entry_price + 0.01
+            for j in range(i + 1, len(df)):
+                if df["Close"].iloc[j] <= stop_loss:
+                    exit_price = stop_loss
+                    break
+                elif df["Close"].iloc[j] >= take_profit:
+                    exit_price = take_profit
+                    break
+            else:
+                exit_price = df["Close"].iloc[-1]
+            profit_loss = exit_price - entry_price
+            trade_result = "Win" if profit_loss > 0 else "Loss"
+            trades.append({"entry_price": entry_price, "exit_price": exit_price, "stop_loss": stop_loss, "take_profit": take_profit, "trade_result": trade_result})
+
+            if trade_result == "Win":
+                total_profit_loss += investment * (take_profit - entry_price)
+            else:
+                total_profit_loss += investment * (stop_loss - entry_price)
+
+    win_pct = (sum(1 for trade in trades if trade["trade_result"] == "Win") / len(trades))*100
+    loss_pct = 1 - win_pct
+
+
+    wins = 0
+    losses = 0
+
+    for trade in trades:
+        if trade['trade_result'] == 'Win':
+            wins += 1
+        else:
+            losses += 1
+
+    win_rate = (wins / len(trades)) * 100
+
+
+    # Calculate the total profit or loss
+    # total_profit_loss = sum([t["exit_price"] - t["entry_price"] for t in trades])
+
+    # Plot the Forex prices and moving average
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df.index, open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"], name="Price"))
+    fig.add_trace(go.Scatter(x=df.index, y=df["ma_50"], mode="lines", name="50-day Moving Average"))
+    for i in range(50, len(df)):
+        if trades:
+            entry_points = df[df["trend"] == "bullish"]["Close"]
+            fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points, mode="markers", name="Entry Points", marker=dict(color="red", symbol="circle")))
+            fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points - 0.005, mode="lines", name="Stop Losses", line=dict(color="black", dash="dash")))
+            fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points + 0.01, mode="lines", name="Take Profits", line=dict(color="green", dash="dash")))
+
+    # Set layout properties
+    fig.update_layout(
+        margin=dict(l=50, r=50, t=50, b=50),
+        xaxis_rangeslider_visible=False,
+    )
+    # Convert the plot to a JSON string
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # # Determine the trend based on the moving average
+    if df["Close"].iloc[-1] > df["ma_50"].iloc[-1]:
+        trend = "bullish"
+    else:
+        trend = "bearish"
+
+    # Recommend entry points, stop loss, and take profit based on the trend
+    if trend == "bullish":
+        entry_point = df["Close"].iloc[-1]
+        stop_loss = entry_point - 0.005
+        take_profit = entry_point + 0.01
+    else:
+        entry_point = df["Close"].iloc[-1]
+        stop_loss = entry_point + 0.005
+        take_profit = entry_point - 0.01
+
+    context = {
+        "win_pct":win_pct,
+        "loss_pct":loss_pct,
+        "win_rate": win_rate,
+        "trades":trades,
+        "trend": trend,
+        "entry_point": entry_point,
+        "stop_loss": stop_loss,
+        "take_profit": take_profit,
+        "total_profit_loss": total_profit_loss,
+        "graphJSON": graphJSON,
+    }
+    return render(request, "forex/trend.html", context)
