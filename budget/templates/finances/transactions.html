@@ -32,10 +32,13 @@
         <option value="-amount" {% if sort == '-amount' %}selected{% endif %}>Amount (Descending)</option>
         <option value="amount" {% if sort == 'amount' %}selected{% endif %}>Amount (Ascending)</option>
     </select>
+    <label for="search">Search:</label>
+    <input type="text" name="search" id="search" value="{{ request.GET.search }}">
     <br><br>
     <input type="submit" value="Filter">
     <input type="hidden" name="page" value="{{ request.GET.page }}">
 </form>
+
 <br><br>
 <table>
     <tr>

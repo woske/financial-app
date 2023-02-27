@@ -123,7 +123,7 @@ def add_transaction(request):
         form = TransactionForm(request.POST)
         form.fields['date'].widget = forms.DateInput(attrs={'type': 'date'})
         account_name = request.POST['account']
-        account = Account.objects.filter(name=account_name).first()
+        account = Account.objects.filter(name=account_name, user=request.user).first()
         if form.is_valid():
             transaction = form.save(commit=False)
             transaction.user = request.user
@@ -135,7 +135,7 @@ def add_transaction(request):
             description = request.POST['description']
             amount = request.POST['amount']
             user = request.user
-            category = Category.objects.get(pk=request.POST['category'])
+            category = Category.objects.get(pk=request.POST['category'], user=request.user)
             transaction = Transaction.objects.create(
                 date=date,
                 description=description,
@@ -150,6 +150,7 @@ def add_transaction(request):
     return render(request, 'finances/add_transaction.html', {'form': form, 'categories': categories, 'accounts': accounts})
 
 
+
 #View Transactions#
 @login_required
 def view_transactions(request):
@@ -158,6 +159,7 @@ def view_transactions(request):
     end_date = request.GET.get('end_date', None)
     account_id = request.GET.get('account', None)
     category_id = request.GET.get('category', None)
+    search_query = request.GET.get('search', None)
     accounts = Account.objects.filter(user=request.user)
     categories = Category.objects.filter(user=request.user)
     sort = request.GET.get('sort', None)
@@ -168,6 +170,8 @@ def view_transactions(request):
         transactions = transactions.filter(account__id=account_id)
     if category_id:
         transactions = transactions.filter(category__id=category_id)
+    if search_query:
+        transactions = transactions.filter(description__icontains=search_query)
 
     if sort:
         transactions = transactions.order_by(sort)
