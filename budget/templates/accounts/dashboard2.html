@@ -1,9 +1,45 @@
-<h1> NO DESIGN YET</h1>
-
-
-<div class="centered">
-    <a class="button" href="{% url 'register' %}">Register</a>
-</div>
-<div class="centered">
-    <a class="button" href="{% url 'login_view' %}">Sign in</a>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Welcome to My Site</title>
+	<style>
+		body {
+			background-image: url('https://example.com/background.jpg');
+			background-size: cover;
+			background-position: center;
+			font-family: Arial, sans-serif;
+		}
+		h1 {
+			color: #fff;
+			font-size: 48px;
+			text-align: center;
+			margin-top: 200px;
+		}
+		.centered {
+			display: flex;
+			justify-content: center;
+			margin-top: 50px;
+		}
+		.button {
+			background-color: #4CAF50;
+			color: #fff;
+			padding: 10px 20px;
+			border: none;
+			border-radius: 5px;
+			font-size: 20px;
+			text-decoration: none;
+			margin: 0 10px;
+		}
+		.button:hover {
+			background-color: #3e8e41;
+		}
+	</style>
+</head>
+<body>
+	<h1>Welcome to My Site</h1>
+	<div class="centered">
+		<a class="button" href="{% url 'register' %}">Register</a>
+		<a class="button" href="{% url 'login_view' %}">Sign in</a>
+	</div>
+</body>
+</html>

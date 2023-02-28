@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from .views import add_transaction, view_transactions, analyze_transactions, create_category, view_categories, import_expenses, register, create_account, view_accounts, edit_transaction, remove_transaction, edit_category, delete_category, edit_account, delete_account
-from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user,track_trend
+from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user,track_trend, compare_expenses
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
@@ -38,8 +38,9 @@ urlpatterns = [
     path('accounts/delete/<int:pk>/', delete_account, name='delete_account'),
     path('accounts/add/', create_account, name='create_account'),
     path('accounts/', view_accounts, name='view_accounts'),
-    path('budgets/yearly/', budget_yearly, name='budget_yearly'),
-    path('budgets/monthly/', budget_monthly, name='budget_monthly'),
+    path('reports/yearly/', budget_yearly, name='budget_yearly'),
+    path('reports/monthly/', budget_monthly, name='budget_monthly'),
+    path('reports/income-vs-expenses/', compare_expenses, name='compare_expenses'),
     path('profile/', profile, name='profile'),
     path('recalculate_balances/', recalculate_balances, name='recalculate_balances'),
     path('profile/delete_user/', delete_user, name='delete_user'),

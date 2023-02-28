@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .helpers import analyze_transactions
 from .forms import TransactionForm, CategoryForm, ImportExpensesForm, AccountForm, UserChangeForm
 import csv, datetime, decimal, json, plotly, urllib, base64, io
-from django.db.models import Sum
+from django.db.models import Case, Sum, When, F
 import plotly.express as px
 import plotly.offline as pyo
 import plotly.graph_objects as go
@@ -15,6 +15,8 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import messages
+from django.db.models.functions import  ExtractMonth, ExtractYear, TruncMonth, TruncYear, TruncDate
+from django.http import JsonResponse
 from decimal import Decimal
 import yfinance as yf
 import matplotlib.pyplot as plt
@@ -110,6 +112,20 @@ def dashboard(request):
         return render(request, 'accounts/dashboard.html')
     else:
         return render(request, 'accounts/dashboard2.html')
+
+@login_required
+def wealth_over_time(request):
+    # Get all the transactions for the user
+    user_transactions = Transaction.objects.filter(user=request.user)
+    
+    # Group transactions by date and compute the total amount for each date
+    data = user_transactions.annotate(date=TruncDate('date')).values('date').annotate(total=Sum('amount')).order_by('date')
+    
+    # Format the data as a JSON object
+    labels = [d['date'].strftime('%Y-%m-%d') for d in data]
+    values = [d['total'] for d in data]
+    data_json = json.dumps({'labels': labels, 'values': values})
+    return render(request, 'accounts/dashboard.html', {'data_json': data_json})
 
 
 #################        App Structure         #################
@@ -324,7 +340,7 @@ def delete_account(request, pk):
 
 
 
-###### BUDGETS ######
+###### REPORTS ######
 @login_required
 def budget_yearly(request):
     categories = Category.objects.filter(user=request.user).exclude(name="[Transfer]")
@@ -480,6 +496,42 @@ def budget_monthly(request):
     return render(request, 'finances/budgets_monthly.html', {'fig_json': fig_json, 'expenses': expenses, 'income': income, 'months': months, 'selected_month': selected_month, 'selected_year': selected_year, 'years': years})
 
 
+@login_required
+def compare_expenses(request):
+    transactions = Transaction.objects.filter(user=request.user)
+    year = request.GET.get('year')
+    current_year = datetime.datetime.now().year
+    selected_year = year if year else current_year
+    if year:
+        transactions = transactions.filter(date__year=year)
+    else:
+        transactions = transactions.filter(date__year=current_year)
+    month_names = {1: 'January',
+                   2: 'February',
+                   3: 'March',
+                   4: 'April',
+                   5: 'May',
+                   6: 'June',
+                   7: 'July',
+                   8: 'August',
+                   9: 'September',
+                   10: 'October',
+                   11: 'November',
+                   12: 'December'}
+
+    data = transactions.annotate(month=ExtractMonth('date')).values('month').annotate(
+        expenses=Sum(Case(When(amount__lt=0, then=F('amount')*(-1)))),
+        income=Sum(Case(When(amount__gt=0, then=F('amount'))))
+    ).order_by('month')
+
+    # Replace month numbers with month names
+    for item in data:
+        item['month'] = month_names[item['month']]
+
+    years = range(2018, current_year + 1)
+    context = {'data': data, 'year': year, 'selected_year': selected_year, 'years': years}
+    return render(request, 'reports/income-vs-expenses.html', context)
+
 
 
 #CSV import Transactions#
@@ -518,8 +570,6 @@ def import_expenses(request):
     else:
         form = ImportExpensesForm()
     return render(request, 'finances/import.html', {'form': form})
-
-
 
 
 #Analyze Transactions#
