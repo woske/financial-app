@@ -15,8 +15,9 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.db.models.functions import  ExtractMonth, ExtractYear, TruncMonth, TruncYear, TruncDate
+from django.db.models.functions import  ExtractYear, ExtractMonth
 from django.http import JsonResponse
+from django.urls import reverse
 from decimal import Decimal
 import yfinance as yf
 import matplotlib.pyplot as plt
@@ -109,23 +110,30 @@ def delete_user(request):
 
 def dashboard(request):
     if request.user.is_authenticated:
-        return render(request, 'accounts/dashboard.html')
+        data = Transaction.objects.filter(user=request.user).order_by('date')
+        cumulative_sum = 0
+        labels = []
+        values = []
+
+        monthly_data = data.annotate(year=ExtractYear('date'), month=ExtractMonth('date')).values('year', 'month').annotate(sum=Sum('amount'))
+        for monthly_sum in monthly_data:
+            year = monthly_sum['year']
+            month = monthly_sum['month']
+            month_name = f'{year:04d}-{month:02d}'
+            cumulative_sum += monthly_sum['sum']
+            labels.append(month_name)
+            values.append(float(cumulative_sum))
+
+        data_json = json.dumps({'labels': labels, 'values': values})
+        
+        accounts = Account.objects.filter(user=request.user)
+        for account in accounts:
+            account.update_balance()
+
+        return render(request, 'accounts/dashboard.html', {'data_json': data_json, 'accounts': accounts})
     else:
         return render(request, 'accounts/dashboard2.html')
 
-@login_required
-def wealth_over_time(request):
-    # Get all the transactions for the user
-    user_transactions = Transaction.objects.filter(user=request.user)
-    
-    # Group transactions by date and compute the total amount for each date
-    data = user_transactions.annotate(date=TruncDate('date')).values('date').annotate(total=Sum('amount')).order_by('date')
-    
-    # Format the data as a JSON object
-    labels = [d['date'].strftime('%Y-%m-%d') for d in data]
-    values = [d['total'] for d in data]
-    data_json = json.dumps({'labels': labels, 'values': values})
-    return render(request, 'accounts/dashboard.html', {'data_json': data_json})
 
 
 #################        App Structure         #################
@@ -201,6 +209,16 @@ def view_transactions(request):
     page = request.GET.get('page')
     transactions = paginator.get_page(page)
 
+    if request.method == 'POST':
+        # Get the list of transaction IDs to delete from the form data
+        transaction_ids = request.POST.getlist('transaction_ids')
+
+        # Delete the selected transactions
+        Transaction.objects.filter(id__in=transaction_ids, user=request.user).delete()
+
+        # Redirect back to the same page
+        return redirect(reverse('transactions') + '?' + request.GET.urlencode())
+
     return render(request, 'finances/transactions.html', {'transactions': transactions, 'accounts': accounts, 'categories': categories, 'total_amount': total_amount, 'sort': sort})
 
 #edit transactions#
@@ -233,6 +251,7 @@ def remove_transaction(request, transaction_id):
         transaction.delete()
         return redirect('transactions')
     return render(request, 'finances/delete_transaction.html', {'transaction': transaction})
+    
 
 
 ###### CATEGORY #####
@@ -544,6 +563,7 @@ def import_expenses(request):
             contents = file.read().decode('utf-8')
             reader = csv.reader(contents.splitlines())
             headers = next(reader)
+            headers = [header.lower() for header in headers]
             for row in reader:
                 account, date, description, category, amount = row
                 try:

@@ -130,6 +130,7 @@ a.subitem {
 main {
     margin-left: 250px;
     margin-top: 50px;
+    margin-right: 30px;
 }
 
 
@@ -298,4 +299,33 @@ a.button {
     background-color: #4CAF50;
     color: white;
     cursor: pointer;
+}
+
+
+/* DashBoard */
+.account-boxes {
+        display: flex;
+        justify-content: space-between;
+        border: 1px solid #ddd;
+        padding: 10px;
+}
+.account-box {
+    width: calc(33.33% - 10px);
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #0769b9;
+    text-align: center;
+    margin: 10px;
+    color: white;
+}
+.account-box h2 {
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 10px;
+}
+.account-box p {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 0;
 }

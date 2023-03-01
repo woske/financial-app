@@ -32,22 +32,24 @@
         <option value="-amount" {% if sort == '-amount' %}selected{% endif %}>Amount (Descending)</option>
         <option value="amount" {% if sort == 'amount' %}selected{% endif %}>Amount (Ascending)</option>
     </select>
-    <label for="search">Search:</label>
-    <input type="text" name="search" id="search" value="{{ request.GET.search }}">
     <br><br>
     <input type="submit" value="Filter">
     <input type="hidden" name="page" value="{{ request.GET.page }}">
 </form>
-
 <br><br>
+
+<form action="" method="post" style="width:100%">
+{% csrf_token %}
+<input type="submit" value="Delete Selected Transactions" style="background-color:red;width:auto;margin-bottom:15px;">
 <table>
     <tr>
-        <td colspan="2"></td>
+        <td colspan="3"></td>
         <td><strong>Total:</strong></td>
         {% load humanize %}
         <td><strong>${{ total_amount|floatformat:2|intcomma }}</strong></td>
     </tr>
     <tr>
+        <th>Select</th>
         <th>Account</th>
         <th>Date</th>
         <th>Description</th>
@@ -58,6 +60,7 @@
     </tr>
     {% for transaction in transactions %}
     <tr>
+        <td style="text-align: center;"><input type="checkbox" name="transaction_ids" value="{{ transaction.id }}"></td>
         <td>{{ transaction.account.name }}</td>
         <td>{{ transaction.date }}</td>
         <td>{{ transaction.description }}</td>
@@ -67,16 +70,10 @@
         <td><a href="{% url 'remove_transaction' transaction.id %}">Remove</a></td>
     </tr>
     {% endfor %}
-
 </table>
-
+</form>
+<br><br>
 <div class="pagination">
-    {% if transactions.has_previous %}
-        <a href="?page={{ transactions.previous_page_number }}">previous</a>
-    {% endif %}
-
-    {% if transactions.has_next %}
-        <a href="?page={{ transactions.next_page_number }}">next</a>
-    {% endif %}
+    <!-- Display pagination links as before -->
 </div>
 {% endblock %}

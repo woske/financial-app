@@ -24,16 +24,6 @@
     {% endfor %}
   </tbody>
 </table> -->
-<div class="account-boxes">
-{% for account in accounts %}
-  <div class="account-box">
-      <h2>{{ account.name }}</h2>
-      {% load humanize %}
-      <p>${{ account.balance|floatformat:2|intcomma }}</p>
-  </div>
-{% endfor %}
-</div>
-
 
 <canvas id="myChart" style="max-height:500px"></canvas>
 
@@ -65,4 +55,4 @@
 
 
 
-{% endblock %}  
+{% endblock %}

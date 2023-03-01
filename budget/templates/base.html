@@ -12,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" /> 
   <link rel="stylesheet" type="text/css" href="{% static '/css/main.css' %}">
   <link rel="stylesheet" type="text/css" href="{% static '/js/main.js' %}">
@@ -29,11 +30,11 @@
         <!--menu item-->
         <ul>
           <li>
-              <a class="has-submenu">
+            <a class="has-submenu" onclick="toggleSubMenu(this)" data-target="submenu1">
                   <span class="has-submenu icon"><i class="fas fa-home"></i></span>
                   <span class="has-submenu item">Categories</span>
               </a>
-              <ul class="submenu">
+              <ul class="submenu" id="submenu1">
                 <li><a class="subitem" href="{% url 'view_categories' %}">All Categories</a></li>
                 <li><a class="subitem" href="{% url 'create_category' %}">Create Category</a></li>
               </ul>  
@@ -76,30 +77,6 @@
                   <span class="has-submenu item">Settings</span>
               </a>
           </li>
-          <!--<li>
-              <a href="#">
-                  <span class="icon"><i class="fas fa-database"></i></span>
-                  <span class="item">Development</span>
-              </a>
-          </li>
-          <li>
-              <a href="#">
-                  <span class="icon"><i class="fas fa-chart-line"></i></span>
-                  <span class="item">Reports</span>
-              </a>
-          </li>
-          <li>
-              <a href="#">
-                  <span class="icon"><i class="fas fa-user-shield"></i></span>
-                  <span class="item">Admin</span>
-              </a>
-          </li>
-          <li>
-              <a href="#">
-                  <span class="icon"><i class="fas fa-cog"></i></span>
-                  <span class="item">Settings</span>
-              </a>
-          </li>-->
         </ul>
     </div>
     <div class="section">
@@ -114,16 +91,6 @@
   </div>
   
 
-
-  <!--<header>
-    <nav>
-      <ul>
-        <li><a href="{% url 'create_category' %}">Create Category</a></li>
-        <li><a href="{% url 'view_categories' %}">View Categories</a></li>
-        <li><a href="{% url 'add_transaction' %}">Create Transaction</a></li>
-      </ul>
-    </nav>
-  </header>-->
   <main>
     {% block content %}{% endblock %}
   </main>
@@ -138,23 +105,14 @@
     hamburger.addEventListener("click", function(){
         document.querySelector("body").classList.toggle("active");
     })
-
-  // $('.has-submenu').click(function () {
-  //   $('.submenu').toggleClass('show-submenu');
-  // });
-  
 </script>
 <script>
-// function toggleSubmenu(event) {
-//   let currentSubmenu = event.currentTarget.nextElementSibling;
-//   let allSubmenus = document.querySelectorAll(".submenu");
-//   for (let i = 0; i < allSubmenus.length; i++) {
-//     allSubmenus[i].style.display = "none";
-//     allSubmenus[i].classList.remove("active");
-//   }
-//   currentSubmenu.style.display = "block";
-//   currentSubmenu.classList.add("active");
-// }
+document.querySelectorAll('.has-submenu').forEach(function(item) {
+  item.addEventListener('click', function() {
+    this.classList.toggle('active');
+  });
+});
+
 
 </script>
 
