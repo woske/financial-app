@@ -17,15 +17,15 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from .views import add_transaction, view_transactions, analyze_transactions, create_category, view_categories, import_expenses, register, create_account, view_accounts, edit_transaction, remove_transaction, edit_category, delete_category, edit_account, delete_account
-from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user,track_trend, compare_expenses 
+from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user,track_trend, compare_expenses, logout_view
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
     path('login/', login_view, name='login_view'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', logout_view, name='logout'),
     path('register/', register, name='register'),
     path('transactions/add/', add_transaction, name='add_transaction'),
-    path('transactions/', view_transactions, name='transactions'),
+    path('transactions/', view_transactions, name='view_transactions'),
     path('transactions/edit/<int:transaction_id>/', edit_transaction, name='edit_transaction'),
     path('transactions/delete/<int:transaction_id>/', remove_transaction, name='remove_transaction'),
     path('transactions/analyze/', analyze_transactions, name='analyze_transactions'),

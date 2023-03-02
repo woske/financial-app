@@ -26,12 +26,17 @@
     <tr>
       <td>{{ category }}</td>
       {% for month, item in month_data.items %}
-      <td{% if item.spent > item.budget %} style="color: red;"{% elif item.spent < item.budget %} style="color: green;"{% endif %}>{{ item.spent|floatformat:2 }} (Budget: {{ item.budget|floatformat:2 }})</td>
+        {% if item %}
+          <td{% if item.spent > item.budget %} style="color: red;"{% elif item.spent < item.budget %} style="color: green;"{% endif %}>{{ item.spent|floatformat:2 }} (Budget: {{ item.budget|floatformat:2 }})</td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
       {% endfor %}
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
 
 <h2 style="text-align: left;">Income {{selected_year}}</h2>
 <table>
@@ -59,37 +64,7 @@
   </tbody>
 </table>
 
-<!-- <form method="get">
-  <div class="form-group">
-    <label for="year">Select year:</label>
-    <select class="form-control" name="year" id="year">
-      {% for year in years %}
-        <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
-      {% endfor %}
-    </select>
-  </div>
 
-  <div class="form-group">
-    <label for="month">Select month:</label>
-    <select name="month" id="month" class="form-control">
-        {% for month_number, month_name in months.items %}
-            <option value="{{ month_number }}" {% if month_number == selected_month %}selected{% endif %}>
-                {{ month_name }}
-            </option>
-        {% endfor %}
-    </select>
-</div>
-
-
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-
-<div id="bar-chart"></div>
-
-<script>
-  var chartData = JSON.parse('{{ fig_json|escapejs }}');
-  Plotly.newPlot("bar-chart", chartData.data, chartData.layout);
-</script> -->
 
 
 

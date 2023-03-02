@@ -19,6 +19,8 @@ from django.db.models.functions import  ExtractYear, ExtractMonth
 from django.http import JsonResponse
 from django.urls import reverse
 from decimal import Decimal
+from datetime import datetime
+from dateutil.parser import parse
 import yfinance as yf
 import matplotlib.pyplot as plt
 import numpy as np
@@ -153,7 +155,7 @@ def add_transaction(request):
             transaction.user = request.user
             transaction.account = Account.objects.get(id=form.cleaned_data['account'])
             transaction.save()
-            return redirect('transactions')
+            return redirect('view_transactions')
         else:
             date = request.POST['date']
             description = request.POST['description']
@@ -168,7 +170,7 @@ def add_transaction(request):
                 account=account,
                 user=user
             )
-            return redirect('transactions')
+            return redirect('view_transactions')
     else:
         form = TransactionForm()
     return render(request, 'finances/add_transaction.html', {'form': form, 'categories': categories, 'accounts': accounts})
@@ -217,7 +219,7 @@ def view_transactions(request):
         Transaction.objects.filter(id__in=transaction_ids, user=request.user).delete()
 
         # Redirect back to the same page
-        return redirect(reverse('transactions') + '?' + request.GET.urlencode())
+        return redirect(reverse('view_transactions') + '?' + request.GET.urlencode())
 
     return render(request, 'finances/transactions.html', {'transactions': transactions, 'accounts': accounts, 'categories': categories, 'total_amount': total_amount, 'sort': sort})
 
@@ -237,7 +239,7 @@ def edit_transaction(request, transaction_id):
             account_id = request.POST['account']
             transaction.account = Account.objects.get(id=account_id, user=request.user)
             transaction.save()
-            return redirect('transactions')
+            return redirect('view_transactions')
     else:
         form = TransactionForm(instance=transaction, category_choices=categories, account_choices=accounts)
 
@@ -249,7 +251,7 @@ def remove_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
     if request.method == 'POST':
         transaction.delete()
-        return redirect('transactions')
+        return redirect('view_transactions')
     return render(request, 'finances/delete_transaction.html', {'transaction': transaction})
     
 
@@ -366,7 +368,7 @@ def budget_yearly(request):
     transactions = Transaction.objects.filter(user=request.user).exclude(category__name="[Transfer]")
 
     year = request.GET.get('year')
-    selected_year = year if year else datetime.datetime.now().year
+    selected_year = year if year else datetime.now().year
     if year:
         transactions = transactions.filter(date__year=year)
     else:
@@ -427,99 +429,51 @@ def budget_yearly(request):
         }
 
     
-    current_year = datetime.datetime.now().year
+    current_year = datetime.now().year
     years = range(2018, current_year + 1)
 
     return render(request, 'finances/budgets_yearly.html', {'expenses': expenses, 'income': income, 'months': months, 'selected_year': selected_year, 'years': years})
 
-
 @login_required
 def budget_monthly(request):
-    categories = Category.objects.filter(user=request.user).exclude(name="[Transfer]")
-    transactions = Transaction.objects.filter(user=request.user).exclude(category__name="[Transfer]")
+    categories = Category.objects.filter(user=request.user)
+    transactions = Transaction.objects.filter(user=request.user)
 
-    year = request.GET.get('year')
-    month = request.GET.get('month')
-    selected_year = year if year else datetime.datetime.now().year
-    if year:
-        transactions = transactions.filter(date__year=year)
-    else:
-        transactions = transactions.filter(date__year=selected_year)
-
-    selected_month = month if month else datetime.datetime.now().month
-    if month:
-        transactions = transactions.filter(date__month=month)
-    else:
-        transactions = transactions.filter(date__month=selected_month)
-
-    transactions_by_month_and_category = transactions.values('category__name', 'date__month').annotate(spent=Sum('amount'))
-
-    months = {
-        1: 'January',
-        2: 'February',
-        3: 'March',
-        4: 'April',
-        5: 'May',
-        6: 'June',
-        7: 'July',
-        8: 'August',
-        9: 'September',
-        10: 'October',
-        11: 'November',
-        12: 'December',
-    }
-
-    expenses = {}
-    income = {}
-    for transaction in transactions_by_month_and_category:
-        category = transaction['category__name']
-        month = months[transaction['date__month']]
-        spent = transaction['spent']
-        category_budget = categories.get(name=category).monthly_budget
-
-        if spent < 0:
-            if category not in expenses:
-                expenses[category] = {}
-            expenses[category][month] = {
-                'spent': abs(spent),
-                'budget': category_budget,
-                'difference': abs(spent) - category_budget,
-            }
-        else:
-            if category not in income:
-                income[category] = {}
-            income[category][month] = {
-                'spent': spent,
-                'budget': category_budget,
-                'difference': spent - category_budget,
-            }
-
-    chart_data = {}
-    for transaction in transactions_by_month_and_category:
-        category = transaction['category__name']
-        spent = transaction['spent']
-        category_budget = categories.get(name=category).monthly_budget
-        chart_data[category] = {
-            'budget': category_budget,
-            'spent': abs(spent),
-            'difference': category_budget - abs(spent),
-        }
-
-    fig = px.bar(x=list(chart_data.keys()), y=[data['difference'] for data in chart_data.values()],
-                 labels={'x': 'Category', 'y': 'Difference'})
-    fig_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
     
-    current_year = datetime.datetime.now().year
-    years = range(2018, current_year + 1)
 
-    return render(request, 'finances/budgets_monthly.html', {'fig_json': fig_json, 'expenses': expenses, 'income': income, 'months': months, 'selected_month': selected_month, 'selected_year': selected_year, 'years': years})
+    if start_date and end_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        num_days = (end_date - start_date).days + 1
+        num_months = Decimal(num_days / Decimal(30))
+
+        transactions = transactions.filter(date__range=[start_date, end_date])
+        categories = categories.annotate(monthly_budget_adjusted=F('monthly_budget') * num_months)
+
+    category_totals = []
+    for category in categories:
+        total = transactions.filter(category=category).aggregate(total=Sum('amount'))['total'] or 0
+        category_totals.append((category, total))
+
+    # Order the categories based on total spent
+    categories = sorted(category_totals, key=lambda x: x[1], reverse=True)
+    
+    return render(request, 'finances/budgets_monthly.html', {
+        'categories': categories,
+        'start_date': start_date,
+        'end_date': end_date,
+        'category_totals': category_totals,
+    })
+
 
 
 @login_required
 def compare_expenses(request):
     transactions = Transaction.objects.filter(user=request.user)
     year = request.GET.get('year')
-    current_year = datetime.datetime.now().year
+    current_year = datetime.now().year
     selected_year = year if year else current_year
     if year:
         transactions = transactions.filter(date__year=year)
@@ -561,21 +515,29 @@ def import_expenses(request):
         if form.is_valid():
             file = request.FILES['file']
             contents = file.read().decode('utf-8')
-            reader = csv.reader(contents.splitlines())
-            headers = next(reader)
-            headers = [header.lower() for header in headers]
+            reader = csv.DictReader(contents.splitlines())
             for row in reader:
-                account, date, description, category, amount = row
+                account_name = row.get('Account')
+                date_str = row.get('Date')
+                description = row.get('Description')
+                category_name = row.get('Category')
+                amount_str = row.get('Amount')
+                if not all([account_name, date_str, description, category_name, amount_str]):
+                    continue  # skip this row if any of the required data is missing
                 try:
-                    amount = Decimal(amount.strip().replace(',', ''))
+                    amount = Decimal(amount_str.strip().replace(',', ''))
                 except decimal.InvalidOperation:
                     continue  # skip this row if the amount cannot be converted
+                try:
+                    date = parse(date_str, fuzzy=True).date()
+                except ValueError:
+                    continue  # skip this row if the date cannot be parsed
                 category, _ = Category.objects.get_or_create(
-                    name=category,
+                    name=category_name,
                     user=request.user
                 )
                 account, _ = Account.objects.get_or_create(
-                    name=account,
+                    name=account_name,
                     user=request.user
                 )
                 Transaction.objects.create(
@@ -586,10 +548,11 @@ def import_expenses(request):
                     category=category,
                     user=request.user
                 )
-            return redirect('transactions')
+            return redirect('view_transactions')
     else:
         form = ImportExpensesForm()
     return render(request, 'finances/import.html', {'form': form})
+
 
 
 #Analyze Transactions#
@@ -602,7 +565,12 @@ def analyze_transactions(request):
     end_date = request.GET.get('end_date', None)
 
     if start_date and end_date:
-        transactions = transactions.filter(date__range=(start_date, end_date))
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        num_days = (end_date - start_date).days + 1
+        num_months = Decimal(num_days / Decimal(30))
+
+        transactions = transactions.filter(date__range=[start_date, end_date])
 
     # Analyze transactions by category
     category_data = {}
@@ -611,13 +579,20 @@ def analyze_transactions(request):
             continue
         category_transactions = transactions.filter(category=category)
         category_amount = sum([t.amount for t in category_transactions])
-        category_data[category.name] = category_amount
+        if category_amount != 0:  # only include non-zero categories
+            category_data[category.name] = category_amount
+            monthly_budget_adjusted = category.monthly_budget * num_months
+            category_data[category.name] = {
+                'amount': category_amount,
+                'monthly_budget': category.monthly_budget,
+                'monthly_budget_adjusted': monthly_budget_adjusted
+            }
 
     # Calculate total expenses
     total_expenses = sum([t.amount for t in transactions])
 
     # Sort category data by values (descending)
-    sorted_category_data = dict(sorted(category_data.items(), key=lambda item: item[1], reverse=True))
+    sorted_category_data = dict(sorted(category_data.items(), key=lambda item: item[1]['amount'], reverse=True))
 
     # Filter transactions by amount
     income_transactions = transactions.filter(amount__gt=0)
@@ -637,12 +612,14 @@ def analyze_transactions(request):
     expense_pie_html = pyo.plot(expense_pie, output_type='div')
 
     context = {
-    'data': sorted_category_data,
-    'total_expenses': total_expenses,
-    'income_pie_html': income_pie_html,
-    'expense_pie_html': expense_pie_html,
+        'categories': categories,
+        'data': sorted_category_data,
+        'total_expenses': total_expenses,
+        'income_pie_html': income_pie_html,
+        'expense_pie_html': expense_pie_html,
     }
     return render(request, 'finances/analyze.html', context)
+
 
 
 

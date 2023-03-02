@@ -18,13 +18,15 @@
     <tr>
       <th>Category</th>
       <th>Total Spend</th>
+      <th>Budget</th>
     </tr>
-    {% for category, spend in data.items %}
+    {% for category, data in data.items %}
     {% if spend != 0 %}
     <tr>
       {% load humanize %}
       <td>{{ category }}</td>
-      <td>${{ spend|floatformat:2|intcomma }}</td>
+      <td>${{ data.amount }}</td>
+      <td>{{ data.monthly_budget_adjusted|floatformat:2|intcomma }}</td>
     </tr>
     {% endif %}
     {% endfor %}

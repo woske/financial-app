@@ -12,107 +12,270 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" /> 
   <link rel="stylesheet" type="text/css" href="{% static '/css/main.css' %}">
   <link rel="stylesheet" type="text/css" href="{% static '/js/main.js' %}">
 </head>
-<body>
-  <div class="wrapper">
-    <!--Top menu -->
-    <div class="sidebar">
-       <!--profile image & text-->
-       <div class="profile">
-          <img src="{% static '/img/test.jpg' %}" alt="profile_picture">
-          <h3>{{ user.first_name }} {{user.last_name}}</h3>
-          <a style="text-align:center; color:white;text-decoration: underline;"href="{% url 'logout'%}">Log out</a>
-        </div>
-        <!--menu item-->
-        <ul>
-          <li>
-            <a class="has-submenu" onclick="toggleSubMenu(this)" data-target="submenu1">
-                  <span class="has-submenu icon"><i class="fas fa-home"></i></span>
-                  <span class="has-submenu item">Categories</span>
-              </a>
-              <ul class="submenu" id="submenu1">
-                <li><a class="subitem" href="{% url 'view_categories' %}">All Categories</a></li>
-                <li><a class="subitem" href="{% url 'create_category' %}">Create Category</a></li>
-              </ul>  
-          </li>
-          <li>
-              <a class="has-submenu">
-                  <span class="has-submenu icon"><i class="fas fa-home"></i></span>
-                  <span class="has-submenu item">Accounts</span>
-              </a>
-              <ul class="submenu">
-                <li><a class="subitem" href="{% url 'view_accounts' %}">All Accounts</a></li>
-                <li><a class="subitem" href="{% url 'create_account' %}">Create Account</a></li>
-              </ul>  
-          </li>
-          <li>
-              <a class="has-submenu">
-                  <span class="has-submenu icon"><i class="fas fa-home"></i></span>
-                  <span class="has-submenu item">Transactions</span>
-              </a>
-              <ul class="submenu">
-                <li><a class="subitem" href="{% url 'transactions' %}">All Transactions</a></li>
-                <li><a class="subitem" href="{% url 'add_transaction' %}">Add Transaction</a></li>
-                <li><a class="subitem" href="{% url 'import_expenses' %}">Import CSV</a></li>
-              </ul>  
-          </li>
-          <li>
-            <a class="has-submenu">
-                <span class="has-submenu icon"><i class="fas fa-home"></i></span>
-                <span class="has-submenu item">Reports</span>
-            </a>
-            <ul class="submenu">
-              <li><a class="subitem" href="{% url 'budget_yearly' %}">Yearly</a></li>
-              <li><a class="subitem" href="{% url 'budget_monthly' %}">Monthly</a></li>
-              <li><a class="subitem" href="{% url 'compare_expenses' %}">Expenses/Income</a></li> 
-            </ul>  
+<body class="skin-blue-black">
+	<div class="wrapper">
+		<header class="main-header col-lg-12">
+				<span class="logo-mid first border"><img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1818275/profile/profile-80.jpg?1520571742"/>Admin Pro</span>
+				<div class="fa fa-bars" id="menu_bar"></div>
+				<!--<div class="fa fa-search" id="search_bar"></div> -->
+				<!--<div class="fa fa-gears" id="settings_bar"></div>-->
+				<div class="user-profile">
+				<span>{{ user.first_name }}</br>{{user.last_name}}</span>
+					<div class="mini-user fa fa-user-circle"></div>
+				</div><!--
+				<div class="fa fa-flag-o" id="icon_bar">
+					<span class="label bg-red">4</span>
+				</div> 
+				<div class="fa fa-bell-o notification-icon" id="icon_bar">
+					<span class="label bg-orange">2</span> 
+				</div>
+				<div class="fa fa-envelope-o" id="icon_bar">
+					<span class="label bg-yellow">7</span>
+				</div> -->
+		</header>
+    <div class="leftMenu openMenu">
+      <ul class="leftMenuList">
+        <li class="{% if request.path == '/' %}active{% endif %} tooltip_nav point01">
+          <a href="{% url 'dashboard' %}">
+            <i class="fa fa-dashboard" aria-hidden="true"></i>
+            <span>Dashboard</span>
+          </a>
         </li>
-          <li>
-              <a href="{% url 'profile' %}" class="has-submenu">
-                  <span class="has-submenu icon"><i class="fas fa-cog"></i></span>
-                  <span class="has-submenu item">Settings</span>
+        <!-- <li class="tooltip_nav point02">
+          <a href="#">
+            <i class="fa fa-users" aria-hidden="true"></i>
+            <span>Transactions</span>
+          </a>
+        </li> -->
+        <li class="{% if request.path == '/transactions/' %}active{% endif %} tooltip_nav point03">
+          <a href="#" class="dropdown">
+            <i class="fa fa-table" aria-hidden="true"></i>
+            <span>Transactions</span>
+          </a>
+          <ul class="dropdownlist">
+            <li>
+              <a href="{% url 'view_transactions' %}" >
+                <span> All Transactions</span>
               </a>
-          </li>
-        </ul>
-    </div>
-    <div class="section">
-      <div class="top_navbar">
-          <div class="hamburger">
-              <a href="#">
-                  <i class="fas fa-bars"></i>
+            </li>
+            <li>
+              <a href="{% url 'add_transaction' %}" >
+                <span> Add Transaction</span>
               </a>
-          </div>
-      </div>
-    </div>
-  </div>
+            </li>
+            <li>
+              <a href="{% url 'import_expenses' %}" >
+                <span> Import CSV</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+				<li class="{% if request.path == '/categories/' %}active{% endif %} tooltip_nav point04">
+					<a href="#" class="dropdown">
+					<i class="fa fa-building" aria-hidden="true"></i>
+					<span>Category</span>
+					</a>
+          <ul class="dropdownlist">
+            <li>
+              <a href="{% url 'view_categories' %}">
+                <span> View Categories</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'create_category' %}">
+                <span> Add Category</span>
+              </a>
+            </li>
+          </ul>
+				</li>
+				<li class="{% if request.path == '/accounts/' %}active{% endif %} tooltip_nav point05">
+					<a href="#" class="dropdown">
+					<i class="fa fa-file" aria-hidden="true"></i>
+					<span>Accounts</span>
+					</a>
+          <ul class="dropdownlist">
+            <li>
+              <a href="{% url 'view_accounts' %}">
+                <span> View Accounts</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'create_account' %}">
+                <span> Add Account</span>
+              </a>
+            </li>
+          </ul>
+				</li>
+				<li class="tooltip_nav point06">
+					<a href="#">
+					<i class="fa fa-envelope" aria-hidden="true"></i>
+					<span>MailBox</span>
+					</a>
+				</li>
+				<li class="{% if request.path == '/reports/' %}active{% endif %} tooltip_nav point07">
+					<a href="#" class="dropdown">
+					<i class="fa fa-th" aria-hidden="true"></i>
+					<span>Reports</span>
+					</a>
+          <ul class="dropdownlist">
+            <li>
+              <a href="{% url 'compare_expenses' %}">
+                <span> Income/Expenses</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'budget_yearly' %}">
+                <span> Yearly</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'budget_monthly' %}">
+                <span> Monthly</span>
+              </a>
+            </li>
+          </ul>
+				</li>
+				<li class="tooltip_nav point08">
+					<a href="#">
+					<i class="fa fa-gear" aria-hidden="true"></i>
+					<span>Settings</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper content-wrapper-mid">
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+				<!-- <h1>
+					Dashboard
+					<small>Control panel</small>
+				</h1> -->
+					<ol class="breadcrumb">
+					<li class="divider"><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+					<li class="active">Dashboard</li>
+				</ol>
+			</section>
+
+			<!-- Main content -->
+			<section class="content">
+
+        {% block content %}{% endblock %}
+			</section><!-- /.content -->
+		</div><!-- /.content-wrapper -->
+	  <!-- Control Sidebar -->
+      <!-- <div class="notification-hover">
+				<span>Layout Option <i>02 new</i></span>
+				<li>
+					<p>Profile Vistors<i class="bg-red">06</i></p>
+				</li>
+				<li>
+					<p>Uploads<i class="bg-green">+76</i></p>
+				</li>
+				<li>
+					<p>Matches<i class="bg-orange">+56</i></p>
+				</li>
+				<li>
+					<p>Favourites<i class="bg-purple">+32</i></p>
+				</li>
+				<li>
+					<p>Blocked<i class="bg-grey">+23</i></p>
+				</li>
+	    </div> -->
+      <div class="profile-hover">
+			<div class="user-profile-icon fa fa-user-circle"></div>
+			<div class="user-profile">
+				<span class="">{{user.first_name}}{{user.last_name}}</span></br>
+				<!--<span class="">Accountant</span>-->
+				<a href="{% url 'logout' %}"><h1>Logout</h1></a>	
+			</div>
+	  </div>
+		<!--<nav class="navigation">
+			<div class="menu">
+				<span>Layout Option</span>
+				<li>
+					<p>Control Theme</p><label class="switch units"><input id="switch" type="checkbox" value=""/><div class="slider round"></div></label>
+				</li>
+				<li>
+					<p>Set Activity</p><label class="switch units"><input id="switch" type="checkbox" value=""/><div class="slider round"></div></label>
+				</li>
+			</div>
+		</nav>-->
+	  
+	 <div class="popup-overlay"></div>
+	<div class="popup-overlay-bell"></div>	 
+	</div>
+</body>
+  
+<script>
+  $(document).ready(function () {
+    document.querySelector("#menu_bar").onclick = function () {
+      var element = document.querySelector(".leftMenu");
+      element.classList.toggle("openMenu");
+  
+      var closeAccordion = document.getElementsByClassName("dropdown");
+      var i = 0;
+      for (i = 0; i < closeAccordion.length; i++) {
+        closeAccordion[i].classList.remove("active");
+      }
+    };
+  
+    var dropdown = document.getElementsByClassName("dropdown");
+    var i = 0;
+    for (i = 0; i < dropdown.length; i++) {
+      dropdown[i].onclick = function () {
+        this.classList.toggle("active");
+      };
+    }
+  
+    $("#menu_bar").click(function () {
+      $(".main-header span:first").toggleClass("first border");
+      $(".content-wrapper").toggleClass("content-wrapper-mid");
+      $(".tooltip_nav p").toggleClass("hide");
+    });
+  
+    jQuery(function ($) {
+      $("#settings_bar").click(function () {
+        $(".navigation").toggleClass("open");
+      });
+    });
+  
+    $("#color01").click(function () {
+      $("body").addClass("skin-green");
+    });
+  });
+  
+  $(document).ready(function () {
+    $(".user-profile").on("click", function (e) {
+      $(".profile-hover").toggle();
+      $(".popup-overlay").toggle();
+      e.preventDefault();
+    });
+  
+    $(".popup-overlay").click(function () {
+      $(".popup-overlay").toggle();
+      $(".profile-hover").toggle();
+    });
+  
+    $(".notification-icon").on("click", function (e) {
+      $(".notification-hover").toggle();
+      $(".popup-overlay-bell").toggle();
+      e.preventDefault();
+    });
+  
+    $(".popup-overlay-bell").click(function () {
+      $(".popup-overlay-bell").toggle();
+      $(".notification-hover").toggle();
+    });
+  });
+  
+</script>
   
 
-  <main>
-    {% block content %}{% endblock %}
-  </main>
-  <footer>
-    <p>&copy; {{ year }}</p>
-  </footer>
-</body>
-</html>
-
-<script>
-  var hamburger = document.querySelector(".hamburger");
-    hamburger.addEventListener("click", function(){
-        document.querySelector("body").classList.toggle("active");
-    })
-</script>
-<script>
-document.querySelectorAll('.has-submenu').forEach(function(item) {
-  item.addEventListener('click', function() {
-    this.classList.toggle('active');
-  });
-});
-
-
-</script>
 
