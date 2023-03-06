@@ -31,7 +31,7 @@ class CategoryForm(forms.ModelForm):
 class AccountForm(forms.ModelForm):
     class Meta:
         model = Account
-        fields = ['name', 'balance']
+        fields = ['name', 'balance', 'goal']
 
 class ImportExpensesForm(forms.Form):
     file = forms.FileField()
