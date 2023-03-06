@@ -19,7 +19,7 @@ from django.db.models.functions import  ExtractYear, ExtractMonth
 from django.http import JsonResponse
 from django.urls import reverse
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.parser import parse
 import yfinance as yf
 import matplotlib.pyplot as plt
@@ -555,22 +555,222 @@ def import_expenses(request):
 
 
 
+# MACHINELEARNING #
+
+
+# import pandas as pd
+# from sklearn.tree import DecisionTreeClassifier
+# from sklearn.preprocessing import OneHotEncoder
+# from sklearn.impute import SimpleImputer
+# import pickle
+# from sklearn.compose import ColumnTransformer
+# from sklearn.preprocessing import OneHotEncoder
+# from sklearn.impute import SimpleImputer
+# from sklearn.tree import DecisionTreeClassifier
+# from sklearn.pipeline import Pipeline
+# import pickle
+# import pandas as pd
+# import numpy as np
+# import csv
+# from django.contrib.auth.decorators import login_required
+# from django.shortcuts import render, redirect
+# from .forms import ImportExpensesForm
+# from .models import Transaction, Account, Category
+
+# def train_model(user):
+#     # Collect past transactions
+#     transactions = Transaction.objects.filter(user=user)
+
+#     # Preprocess the data
+#     df = pd.DataFrame.from_records(transactions.values('account__name', 'description', 'category__name', 'amount'))
+#     df = pd.get_dummies(df, columns=['account__name', 'description'])
+#     df['amount'] = df['amount'].astype('float64')  # change amount to float64
+
+#     # Impute missing values with the median
+#     numeric_transformer = Pipeline(steps=[
+#         ('imputer', SimpleImputer(strategy='median')),
+#     ])
+#     categorical_transformer = Pipeline(steps=[
+#         ('imputer', SimpleImputer(strategy='most_frequent')),
+#         ('onehot', OneHotEncoder(handle_unknown='ignore'))
+#     ])
+
+#     preprocessor = ColumnTransformer(
+#         transformers=[
+#             ('num', numeric_transformer, ['amount']),
+#             ('cat', categorical_transformer, ['account__name', 'description'])
+#         ])
+
+#     X = df.drop('category__name', axis=1)
+#     y = df['category__name']
+
+#     # Train the model
+#     classifier = Pipeline(steps=[
+#         ('preprocessor', preprocessor),
+#         ('classifier', DecisionTreeClassifier())
+#     ])
+#     classifier.fit(X, y)
+
+#     # Save the model to disk
+#     filename = f'model_{user.id}.pkl'
+#     with open(filename, 'wb') as file:
+#         pickle.dump((preprocessor, classifier), file)
+
+#     # Get the feature names
+#     feature_names = preprocessor.transformers_[1][1].named_steps['onehot'].get_feature_names_out(
+#         preprocessor.transformers_[1][2])
+#     feature_names_out = np.concatenate((['amount'], feature_names))
+
+#     return feature_names_out, preprocessor, classifier
+
+
+# def predict_category(user, transaction):
+#     # Load the model from disk
+#     filename = f'model_{user.id}.pkl'
+#     with open(filename, 'rb') as file:
+#         preprocessor, classifier = pickle.load(file)
+
+#     # Preprocess the new transaction
+#     df = pd.DataFrame.from_records([transaction], columns=['account__name', 'description'])
+#     X = preprocessor.transform(df)
+
+#     # Predict the category
+#     y_pred = classifier.predict(X)
+#     return y_pred[0]
+
+
+# @login_required
+# def train_model_view(request):
+#     if request.method == 'POST':
+#         try:
+#             train_model(request.user)
+#         except Exception as e:
+#             print(e)
+#         return redirect('model_trained')
+#     else:
+#         return render(request, 'model/train_model.html')
+
+
+# @login_required
+# def import_expenses(request):
+#     if request.method == 'POST':
+#         form = ImportExpensesForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             file = request.FILES['file']
+#             contents = file.read().decode('utf-8')
+#             reader = csv.DictReader(contents.splitlines())
+
+#             for row in reader:
+#                 account_name = row['Account']
+#                 date = row['Date']
+#                 description = row['Description']
+#                 amount = row['Amount']
+#                 category_name = predict_category(request.user, {'account__name': account_name, 'description': description})
+
+#                 try:
+#                     amount = Decimal(amount.strip().replace(',', ''))
+#                 except decimal.InvalidOperation:
+#                     continue  # skip this row if the amount cannot be converted
+
+#                 # Save the transaction
+#                 account, created = Account.objects.get_or_create(name=account_name, user=request.user)
+#                 category, created = Category.objects.get_or_create(name=category_name, user=request.user)
+#                 transaction = Transaction.objects.create(date=date, description=description, amount=amount, account=account, category=category, user=request.user)
+
+#             return redirect('import_expenses')
+#     else:
+#         form = ImportExpensesForm()
+#         return render(request, 'finances/import.html', {'form': form})
+
+
+
+
+
+
+# @login_required
+# def import_expenses(request):
+#     if request.method == 'POST':
+#         form = ImportExpensesForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             file = request.FILES['file']
+#             contents = file.read().decode('utf-8')
+#             reader = csv.DictReader(contents.splitlines())
+
+#             for row in reader:
+#                 account_name = row['Account']
+#                 date = row['Date']
+#                 description = row['Description']
+#                 amount = row['Amount']
+#                 category_name = row['Category']
+
+#                 try:
+#                     amount = Decimal(amount.strip().replace(',', ''))
+#                 except decimal.InvalidOperation:
+#                     continue  # skip this row if the amount cannot be converted
+
+#                 account, _ = Account.objects.get_or_create(
+#                     name=account_name,
+#                     user=request.user
+#                 )
+
+#                 transaction = {
+#                     'account__name': account_name,
+#                     'description': description
+#                 }
+
+#                 category = predict_category(request.user, transaction) or Category.objects.get_or_create(
+#                     name=category_name,
+#                     user=request.user
+#                 )
+
+#                 Transaction.objects.create(
+#                     date=date,
+#                     account=account,
+#                     description=description,
+#                     amount=amount,
+#                     category=category,
+#                     user=request.user
+#                 )
+
+#             return redirect('transactions')
+#     else:
+#         form = ImportExpensesForm()
+#     return render(request, 'finances/import.html', {'form': form})
+
+
+
 #Analyze Transactions#
 @login_required
 def analyze_transactions(request):
     transactions = Transaction.objects.filter(user=request.user)
     categories = Category.objects.filter(user=request.user)
 
-    start_date = request.GET.get('start_date', None)
     end_date = request.GET.get('end_date', None)
+    num_months = 1
 
-    if start_date and end_date:
-        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+    if end_date:
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-        num_days = (end_date - start_date).days + 1
-        num_months = Decimal(num_days / Decimal(30))
+    else:
+        end_date = datetime.today().date()
 
-        transactions = transactions.filter(date__range=[start_date, end_date])
+    start_date = request.GET.get('start_date', None)
+
+    if start_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        if not end_date:  # set end date to today if not provided
+            end_date = datetime.today().date()
+    else:
+        if not end_date:  # set start and end date to last 30 days if neither provided
+            end_date = datetime.today().date()
+            start_date = end_date - timedelta(days=30)
+        else:
+            start_date = end_date - timedelta(days=30)
+
+
+    num_days = (end_date - start_date).days + 1
+    num_months = Decimal(num_days / Decimal(30))
+
+    transactions = transactions.filter(date__range=[start_date, end_date])
 
     # Analyze transactions by category
     category_data = {}
@@ -617,6 +817,8 @@ def analyze_transactions(request):
         'total_expenses': total_expenses,
         'income_pie_html': income_pie_html,
         'expense_pie_html': expense_pie_html,
+        'start_date': start_date,
+        'end_date': end_date,
     }
     return render(request, 'finances/analyze.html', context)
 

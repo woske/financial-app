@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
+from django.views.generic.base import TemplateView
 from .views import add_transaction, view_transactions, analyze_transactions, create_category, view_categories, import_expenses, register, create_account, view_accounts, edit_transaction, remove_transaction, edit_category, delete_category, edit_account, delete_account
 from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user,track_trend, compare_expenses, logout_view
 
@@ -45,5 +46,7 @@ urlpatterns = [
     path('recalculate_balances/', recalculate_balances, name='recalculate_balances'),
     path('profile/delete_user/', delete_user, name='delete_user'),
     path('trading/', track_trend, name='track_trend'),
+    # path('train_model/', train_model_view, name='train_model'),
+    # path('model_trained/', TemplateView.as_view(template_name='model/model_trained.html'), name='model_trained'),
     path('admin/', admin.site.urls)
 ]

@@ -71,9 +71,20 @@
     </tr>
     {% endfor %}
 </table>
+{% if transactions.has_previous %}
+  <a href="?{{ request.GET.urlencode }}&page={{ transactions.previous_page_number }}">&laquo; Previous</a>
+{% endif %}
+{% if transactions.has_next %}
+  <a href="?{{ request.GET.urlencode }}&page={{ transactions.next_page_number }}">Next &raquo;</a>
+{% endif %}
+
 </form>
 <br><br>
-<div class="pagination">
-    <!-- Display pagination links as before -->
-</div>
+
+  
+
+
+
+
+
 {% endblock %}
