@@ -1189,3 +1189,26 @@ html {
     }
   }
   
+
+#form-wrapper {
+  display: none;
+}
+  
+button.filter {
+  width: auto;
+}
+
+a.top_button {
+  float: right;
+  font-size: 20px;
+  padding: 9px;
+  text-decoration: none;
+  background: green;
+  padding: 12px;
+  /* margin-top: 20px; */
+  border-radius: 5px;
+  border: none;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+}

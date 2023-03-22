@@ -522,8 +522,10 @@ def import_expenses(request):
                 description = row.get('Description')
                 category_name = row.get('Category')
                 amount_str = row.get('Amount')
-                if not all([account_name, date_str, description, category_name, amount_str]):
+                if not all([account_name, date_str, category_name, amount_str]):
                     continue  # skip this row if any of the required data is missing
+                elif not description:
+                    description = ''  # set description to an empty string if it's missing
                 try:
                     amount = Decimal(amount_str.strip().replace(',', ''))
                 except decimal.InvalidOperation:
@@ -532,14 +534,16 @@ def import_expenses(request):
                     date = parse(date_str, fuzzy=True).date()
                 except ValueError:
                     continue  # skip this row if the date cannot be parsed
-                category, _ = Category.objects.get_or_create(
-                    name=category_name,
-                    user=request.user
-                )
-                account, _ = Account.objects.get_or_create(
-                    name=account_name,
-                    user=request.user
-                )
+                try:
+                    account = Account.objects.get(name=account_name, user=request.user)
+                except Account.DoesNotExist:
+                    account = Account.objects.create(name=account_name, user=request.user)
+
+                try:
+                    category = Category.objects.get(name=category_name, user=request.user)
+                except Category.DoesNotExist:
+                    category = Category.objects.create(name=category_name, user=request.user)
+
                 Transaction.objects.create(
                     date=date,
                     account=account,

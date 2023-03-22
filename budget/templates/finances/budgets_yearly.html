@@ -1,15 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="get">
-  <label for="year">Year:</label>
-  <select id="year" name="year">
-    {% for year in years %}
-    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
-    {% endfor %}
-  </select>
-  <button type="submit">Go</button>
-</form>
+
+<div id="form-wrapper">
+  <form id="date-form" method="get">
+    <label for="year">Year:</label>
+    <select id="year" name="year">
+      {% for year in years %}
+      <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Go</button>
+  </form>
+</div>
+
+<button class="filter" onclick="toggleForm()">Filter</button>
 
 <h2 style="text-align: left;">Expenses {{selected_year}}</h2>
 <table>

@@ -2,40 +2,43 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form action="" method="get">
-    <label for="start_date">Start Date:</label>
-    <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}">
-    <br><br>
-    <label for="end_date">End Date:</label>
-    <input type="date" name="end_date" id="end_date" value="{{ request.GET.end_date }}">
-    <br><br>
-    <label for="account">Account:</label>
-    <select name="account" id="account">
-        <option value="">All</option>
-        {% for account in accounts %}
-            <option value="{{ account.id }}" {% if account.id == request.GET.account %}selected{% endif %}>{{ account.name }}</option>
-        {% endfor %}
-    </select>
-    <br><br>
-    <label for="category">Category:</label>
-    <select name="category" id="category">
-        <option value="">All</option>
-        {% for category in categories %}
-            <option value="{{ category.id }}" {% if category.id == request.GET.category %}selected{% endif %}>{{ category.name }}</option>
-        {% endfor %}
-    </select>
-    <br><br>
-    <label for="sort">Sort By:</label>
-    <select name="sort" id="sort">
-        <option value="-date" {% if sort == '-date' %}selected{% endif %}>Date (Descending)</option>
-        <option value="date" {% if sort == 'date' %}selected{% endif %}>Date (Ascending)</option>
-        <option value="-amount" {% if sort == '-amount' %}selected{% endif %}>Amount (Descending)</option>
-        <option value="amount" {% if sort == 'amount' %}selected{% endif %}>Amount (Ascending)</option>
-    </select>
-    <br><br>
-    <input type="submit" value="Filter">
-    <input type="hidden" name="page" value="{{ request.GET.page }}">
-</form>
+<div id="form-wrapper">
+    <form action="" method="get">
+        <label for="start_date">Start Date:</label>
+        <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}">
+        <br><br>
+        <label for="end_date">End Date:</label>
+        <input type="date" name="end_date" id="end_date" value="{{ request.GET.end_date }}">
+        <br><br>
+        <label for="account">Account:</label>
+        <select name="account" id="account">
+            <option value="">All</option>
+            {% for account in accounts %}
+                <option value="{{ account.id }}" {% if account.id == request.GET.account %}selected{% endif %}>{{ account.name }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <label for="category">Category:</label>
+        <select name="category" id="category">
+            <option value="">All</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id == request.GET.category %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <label for="sort">Sort By:</label>
+        <select name="sort" id="sort">
+            <option value="-date" {% if sort == '-date' %}selected{% endif %}>Date (Descending)</option>
+            <option value="date" {% if sort == 'date' %}selected{% endif %}>Date (Ascending)</option>
+            <option value="-amount" {% if sort == '-amount' %}selected{% endif %}>Amount (Descending)</option>
+            <option value="amount" {% if sort == 'amount' %}selected{% endif %}>Amount (Ascending)</option>
+        </select>
+        <br><br>
+        <input type="submit" value="Filter">
+        <input type="hidden" name="page" value="{{ request.GET.page }}">
+    </form>
+</div>
+<button class="filter" onclick="toggleForm()">Filter</button>
 <br><br>
 
 <form action="" method="post" style="width:100%">

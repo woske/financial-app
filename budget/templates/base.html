@@ -25,7 +25,8 @@
 				<div class="fa fa-bars" id="menu_bar"></div>
 				<!--<div class="fa fa-search" id="search_bar"></div> -->
 				<!--<div class="fa fa-gears" id="settings_bar"></div>-->
-				<div class="user-profile">
+				<a class="top_button" href="{% url 'logout' %}">Logout</a>
+        <div class="user-profile">
 				<span>{{ user.first_name }}</br>{{user.last_name}}</span>
 					<div class="mini-user fa fa-user-circle"></div>
 				</div><!--
@@ -142,7 +143,7 @@
           </ul>
 				</li>
 				<li class="tooltip_nav point08">
-					<a href="#">
+					<a href="{% url 'profile' %}">
 					<i class="fa fa-gear" aria-hidden="true"></i>
 					<span>Settings</span>
 					</a>
@@ -188,14 +189,15 @@
 					<p>Blocked<i class="bg-grey">+23</i></p>
 				</li>
 	    </div> -->
+      
       <div class="profile-hover">
-			<div class="user-profile-icon fa fa-user-circle"></div>
-			<div class="user-profile">
-				<span class="">{{user.first_name}}{{user.last_name}}</span></br>
-				<!--<span class="">Accountant</span>-->
-				<a href="{% url 'logout' %}"><h1>Logout</h1></a>	
-			</div>
-	  </div>
+        <div class="user-profile-icon fa fa-user-circle"></div>
+        <div class="user-profile">
+          <span class="">{{user.first_name}}{{user.last_name}}</span></br>
+          <!--<span class="">Accountant</span>-->
+          	
+        </div>
+      </div>
 		<!--<nav class="navigation">
 			<div class="menu">
 				<span>Layout Option</span>
@@ -275,7 +277,12 @@
     });
   });
   
+  function toggleForm() {
+  var formWrapper = document.getElementById("form-wrapper");
+  formWrapper.style.display = formWrapper.style.display === "none" ? "block" : "none";
+  }
+
 </script>
-  
+
 
 

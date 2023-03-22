@@ -1,18 +1,21 @@
 {% extends 'base.html' %}
 
 {% block content %}
- 
-<form method="get">
-  <div class="form-group">
-    <label for="year">Select year:</label>
-    <select class="form-control" name="year" id="year">
-      {% for year in years %}
-        <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+
+<div id="form-wrapper">
+  <form method="get">
+    <div class="form-group">
+      <label for="year">Select year:</label>
+      <select class="form-control" name="year" id="year">
+        {% for year in years %}
+          <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+<button class="filter" onclick="toggleForm()">Filter</button>
 
 </br>
  <h1>Expenses/Income per month for {{year}}</h1>
