@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3qw=i^@_5nw_ct@3hzzb(n!zta%#jy%1vk@9_tyw#n05j$u(ik
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['baptiste.pythonanywhere.com']
 
 
 # Application definition
@@ -83,6 +83,8 @@ DATABASES = {
 }
 
 STATIC_URL = 'static/'
+
+STATIC_ROOT= '/home/baptiste/financial-app/assets'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'budget/assets/'

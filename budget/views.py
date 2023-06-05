@@ -21,9 +21,9 @@ from django.urls import reverse
 from decimal import Decimal
 from datetime import datetime, timedelta
 from dateutil.parser import parse
-import yfinance as yf
-import matplotlib.pyplot as plt
-import numpy as np
+# import yfinance as yf
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 #Login System#
 def login_view(request):
@@ -127,7 +127,7 @@ def dashboard(request):
             values.append(float(cumulative_sum))
 
         data_json = json.dumps({'labels': labels, 'values': values})
-        
+
         accounts = Account.objects.filter(user=request.user)
         for account in accounts:
             account.update_balance()
@@ -189,7 +189,7 @@ def view_transactions(request):
     accounts = Account.objects.filter(user=request.user)
     categories = Category.objects.filter(user=request.user)
     sort = request.GET.get('sort', None)
-    
+
     if start_date and end_date:
         transactions = transactions.filter(date__range=(start_date, end_date))
     if account_id:
@@ -253,7 +253,7 @@ def remove_transaction(request, transaction_id):
         transaction.delete()
         return redirect('view_transactions')
     return render(request, 'finances/delete_transaction.html', {'transaction': transaction})
-    
+
 
 
 ###### CATEGORY #####
@@ -268,7 +268,7 @@ def create_category(request):
             category.user = request.user
             category.save()
             form.save()
-            return redirect('transactions/view_categories/')
+            return redirect('view_categories')
     else:
         form = CategoryForm()
     return render(request, 'finances/create_category.html', {'form': form})
@@ -315,7 +315,7 @@ def create_account(request):
             account.user = request.user
             account.save()
             account.update_balance()
-            return redirect('transactions/view_account/')
+            return redirect('view_accounts')
     else:
         form = AccountForm()
     return render(request, 'finances/create_account.html', {'form': form})
@@ -428,7 +428,7 @@ def budget_yearly(request):
             'difference': category_budget - abs(spent),
         }
 
-    
+
     current_year = datetime.now().year
     years = range(2018, current_year + 1)
 
@@ -441,7 +441,7 @@ def budget_monthly(request):
 
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
-    
+
 
     if start_date and end_date:
         start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -459,7 +459,7 @@ def budget_monthly(request):
 
     # Order the categories based on total spent
     categories = sorted(category_totals, key=lambda x: x[1], reverse=True)
-    
+
     return render(request, 'finances/budgets_monthly.html', {
         'categories': categories,
         'start_date': start_date,
@@ -559,187 +559,6 @@ def import_expenses(request):
 
 
 
-# MACHINELEARNING #
-
-
-# import pandas as pd
-# from sklearn.tree import DecisionTreeClassifier
-# from sklearn.preprocessing import OneHotEncoder
-# from sklearn.impute import SimpleImputer
-# import pickle
-# from sklearn.compose import ColumnTransformer
-# from sklearn.preprocessing import OneHotEncoder
-# from sklearn.impute import SimpleImputer
-# from sklearn.tree import DecisionTreeClassifier
-# from sklearn.pipeline import Pipeline
-# import pickle
-# import pandas as pd
-# import numpy as np
-# import csv
-# from django.contrib.auth.decorators import login_required
-# from django.shortcuts import render, redirect
-# from .forms import ImportExpensesForm
-# from .models import Transaction, Account, Category
-
-# def train_model(user):
-#     # Collect past transactions
-#     transactions = Transaction.objects.filter(user=user)
-
-#     # Preprocess the data
-#     df = pd.DataFrame.from_records(transactions.values('account__name', 'description', 'category__name', 'amount'))
-#     df = pd.get_dummies(df, columns=['account__name', 'description'])
-#     df['amount'] = df['amount'].astype('float64')  # change amount to float64
-
-#     # Impute missing values with the median
-#     numeric_transformer = Pipeline(steps=[
-#         ('imputer', SimpleImputer(strategy='median')),
-#     ])
-#     categorical_transformer = Pipeline(steps=[
-#         ('imputer', SimpleImputer(strategy='most_frequent')),
-#         ('onehot', OneHotEncoder(handle_unknown='ignore'))
-#     ])
-
-#     preprocessor = ColumnTransformer(
-#         transformers=[
-#             ('num', numeric_transformer, ['amount']),
-#             ('cat', categorical_transformer, ['account__name', 'description'])
-#         ])
-
-#     X = df.drop('category__name', axis=1)
-#     y = df['category__name']
-
-#     # Train the model
-#     classifier = Pipeline(steps=[
-#         ('preprocessor', preprocessor),
-#         ('classifier', DecisionTreeClassifier())
-#     ])
-#     classifier.fit(X, y)
-
-#     # Save the model to disk
-#     filename = f'model_{user.id}.pkl'
-#     with open(filename, 'wb') as file:
-#         pickle.dump((preprocessor, classifier), file)
-
-#     # Get the feature names
-#     feature_names = preprocessor.transformers_[1][1].named_steps['onehot'].get_feature_names_out(
-#         preprocessor.transformers_[1][2])
-#     feature_names_out = np.concatenate((['amount'], feature_names))
-
-#     return feature_names_out, preprocessor, classifier
-
-
-# def predict_category(user, transaction):
-#     # Load the model from disk
-#     filename = f'model_{user.id}.pkl'
-#     with open(filename, 'rb') as file:
-#         preprocessor, classifier = pickle.load(file)
-
-#     # Preprocess the new transaction
-#     df = pd.DataFrame.from_records([transaction], columns=['account__name', 'description'])
-#     X = preprocessor.transform(df)
-
-#     # Predict the category
-#     y_pred = classifier.predict(X)
-#     return y_pred[0]
-
-
-# @login_required
-# def train_model_view(request):
-#     if request.method == 'POST':
-#         try:
-#             train_model(request.user)
-#         except Exception as e:
-#             print(e)
-#         return redirect('model_trained')
-#     else:
-#         return render(request, 'model/train_model.html')
-
-
-# @login_required
-# def import_expenses(request):
-#     if request.method == 'POST':
-#         form = ImportExpensesForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             file = request.FILES['file']
-#             contents = file.read().decode('utf-8')
-#             reader = csv.DictReader(contents.splitlines())
-
-#             for row in reader:
-#                 account_name = row['Account']
-#                 date = row['Date']
-#                 description = row['Description']
-#                 amount = row['Amount']
-#                 category_name = predict_category(request.user, {'account__name': account_name, 'description': description})
-
-#                 try:
-#                     amount = Decimal(amount.strip().replace(',', ''))
-#                 except decimal.InvalidOperation:
-#                     continue  # skip this row if the amount cannot be converted
-
-#                 # Save the transaction
-#                 account, created = Account.objects.get_or_create(name=account_name, user=request.user)
-#                 category, created = Category.objects.get_or_create(name=category_name, user=request.user)
-#                 transaction = Transaction.objects.create(date=date, description=description, amount=amount, account=account, category=category, user=request.user)
-
-#             return redirect('import_expenses')
-#     else:
-#         form = ImportExpensesForm()
-#         return render(request, 'finances/import.html', {'form': form})
-
-
-
-
-
-
-# @login_required
-# def import_expenses(request):
-#     if request.method == 'POST':
-#         form = ImportExpensesForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             file = request.FILES['file']
-#             contents = file.read().decode('utf-8')
-#             reader = csv.DictReader(contents.splitlines())
-
-#             for row in reader:
-#                 account_name = row['Account']
-#                 date = row['Date']
-#                 description = row['Description']
-#                 amount = row['Amount']
-#                 category_name = row['Category']
-
-#                 try:
-#                     amount = Decimal(amount.strip().replace(',', ''))
-#                 except decimal.InvalidOperation:
-#                     continue  # skip this row if the amount cannot be converted
-
-#                 account, _ = Account.objects.get_or_create(
-#                     name=account_name,
-#                     user=request.user
-#                 )
-
-#                 transaction = {
-#                     'account__name': account_name,
-#                     'description': description
-#                 }
-
-#                 category = predict_category(request.user, transaction) or Category.objects.get_or_create(
-#                     name=category_name,
-#                     user=request.user
-#                 )
-
-#                 Transaction.objects.create(
-#                     date=date,
-#                     account=account,
-#                     description=description,
-#                     amount=amount,
-#                     category=category,
-#                     user=request.user
-#                 )
-
-#             return redirect('transactions')
-#     else:
-#         form = ImportExpensesForm()
-#     return render(request, 'finances/import.html', {'form': form})
 
 
 
@@ -830,111 +649,111 @@ def analyze_transactions(request):
 
 
 #####         TREND FOREX ##########
-@login_required
-def track_trend(request):
-    # Define the currency pair you want to trade
-    symbol = "EURUSD=X"
+# @login_required
+# def track_trend(request):
+#     # Define the currency pair you want to trade
+#     symbol = "EURUSD=X"
 
-    # Get historical Forex prices from yfinance
-    df = yf.download(symbol, interval="1d", period="1y")
+#     # Get historical Forex prices from yfinance
+#     df = yf.download(symbol, interval="1d", period="1y")
 
-    # Calculate the moving average
-    df["ma_50"] = df["Close"].rolling(window=50).mean()
+#     # Calculate the moving average
+#     df["ma_50"] = df["Close"].rolling(window=50).mean()
 
-    # Determine the trend based on the moving average
-    df["trend"] = np.where(df["Close"] > df["ma_50"], "bullish", "bearish")
+#     # Determine the trend based on the moving average
+#     df["trend"] = np.where(df["Close"] > df["ma_50"], "bullish", "bearish")
 
-    # Backtest the strategy
-    investment = 100
-    total_profit_loss = 0
-    trades = []
-    for i in range(50, len(df)):
-        if df["trend"].iloc[i] == "bullish":
-            entry_price = df["Close"].iloc[i]
-            stop_loss = entry_price - 0.005
-            take_profit = entry_price + 0.01
-            for j in range(i + 1, len(df)):
-                if df["Close"].iloc[j] <= stop_loss:
-                    exit_price = stop_loss
-                    break
-                elif df["Close"].iloc[j] >= take_profit:
-                    exit_price = take_profit
-                    break
-            else:
-                exit_price = df["Close"].iloc[-1]
-            profit_loss = exit_price - entry_price
-            trade_result = "Win" if profit_loss > 0 else "Loss"
-            trades.append({"entry_price": entry_price, "exit_price": exit_price, "stop_loss": stop_loss, "take_profit": take_profit, "trade_result": trade_result})
+#     # Backtest the strategy
+#     investment = 100
+#     total_profit_loss = 0
+#     trades = []
+#     for i in range(50, len(df)):
+#         if df["trend"].iloc[i] == "bullish":
+#             entry_price = df["Close"].iloc[i]
+#             stop_loss = entry_price - 0.005
+#             take_profit = entry_price + 0.01
+#             for j in range(i + 1, len(df)):
+#                 if df["Close"].iloc[j] <= stop_loss:
+#                     exit_price = stop_loss
+#                     break
+#                 elif df["Close"].iloc[j] >= take_profit:
+#                     exit_price = take_profit
+#                     break
+#             else:
+#                 exit_price = df["Close"].iloc[-1]
+#             profit_loss = exit_price - entry_price
+#             trade_result = "Win" if profit_loss > 0 else "Loss"
+#             trades.append({"entry_price": entry_price, "exit_price": exit_price, "stop_loss": stop_loss, "take_profit": take_profit, "trade_result": trade_result})
 
-            if trade_result == "Win":
-                total_profit_loss += investment * (take_profit - entry_price)
-            else:
-                total_profit_loss += investment * (stop_loss - entry_price)
+#             if trade_result == "Win":
+#                 total_profit_loss += investment * (take_profit - entry_price)
+#             else:
+#                 total_profit_loss += investment * (stop_loss - entry_price)
 
-    win_pct = (sum(1 for trade in trades if trade["trade_result"] == "Win") / len(trades))*100
-    loss_pct = 1 - win_pct
-
-
-    wins = 0
-    losses = 0
-
-    for trade in trades:
-        if trade['trade_result'] == 'Win':
-            wins += 1
-        else:
-            losses += 1
-
-    win_rate = (wins / len(trades)) * 100
+#     win_pct = (sum(1 for trade in trades if trade["trade_result"] == "Win") / len(trades))*100
+#     loss_pct = 1 - win_pct
 
 
-    # Calculate the total profit or loss
-    # total_profit_loss = sum([t["exit_price"] - t["entry_price"] for t in trades])
+#     wins = 0
+#     losses = 0
 
-    # Plot the Forex prices and moving average
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df.index, open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"], name="Price"))
-    fig.add_trace(go.Scatter(x=df.index, y=df["ma_50"], mode="lines", name="50-day Moving Average"))
-    for i in range(50, len(df)):
-        if trades:
-            entry_points = df[df["trend"] == "bullish"]["Close"]
-            fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points, mode="markers", name="Entry Points", marker=dict(color="red", symbol="circle")))
-            fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points - 0.005, mode="lines", name="Stop Losses", line=dict(color="black", dash="dash")))
-            fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points + 0.01, mode="lines", name="Take Profits", line=dict(color="green", dash="dash")))
+#     for trade in trades:
+#         if trade['trade_result'] == 'Win':
+#             wins += 1
+#         else:
+#             losses += 1
 
-    # Set layout properties
-    fig.update_layout(
-        margin=dict(l=50, r=50, t=50, b=50),
-        xaxis_rangeslider_visible=False,
-    )
-    # Convert the plot to a JSON string
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+#     win_rate = (wins / len(trades)) * 100
 
-    # # Determine the trend based on the moving average
-    if df["Close"].iloc[-1] > df["ma_50"].iloc[-1]:
-        trend = "bullish"
-    else:
-        trend = "bearish"
 
-    # Recommend entry points, stop loss, and take profit based on the trend
-    if trend == "bullish":
-        entry_point = df["Close"].iloc[-1]
-        stop_loss = entry_point - 0.005
-        take_profit = entry_point + 0.01
-    else:
-        entry_point = df["Close"].iloc[-1]
-        stop_loss = entry_point + 0.005
-        take_profit = entry_point - 0.01
+#     # Calculate the total profit or loss
+#     # total_profit_loss = sum([t["exit_price"] - t["entry_price"] for t in trades])
 
-    context = {
-        "win_pct":win_pct,
-        "loss_pct":loss_pct,
-        "win_rate": win_rate,
-        "trades":trades,
-        "trend": trend,
-        "entry_point": entry_point,
-        "stop_loss": stop_loss,
-        "take_profit": take_profit,
-        "total_profit_loss": total_profit_loss,
-        "graphJSON": graphJSON,
-    }
-    return render(request, "forex/trend.html", context)
+#     # Plot the Forex prices and moving average
+#     fig = go.Figure()
+#     fig.add_trace(go.Candlestick(x=df.index, open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"], name="Price"))
+#     fig.add_trace(go.Scatter(x=df.index, y=df["ma_50"], mode="lines", name="50-day Moving Average"))
+#     for i in range(50, len(df)):
+#         if trades:
+#             entry_points = df[df["trend"] == "bullish"]["Close"]
+#             fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points, mode="markers", name="Entry Points", marker=dict(color="red", symbol="circle")))
+#             fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points - 0.005, mode="lines", name="Stop Losses", line=dict(color="black", dash="dash")))
+#             fig.add_trace(go.Scatter(x=entry_points.index, y=entry_points + 0.01, mode="lines", name="Take Profits", line=dict(color="green", dash="dash")))
+
+#     # Set layout properties
+#     fig.update_layout(
+#         margin=dict(l=50, r=50, t=50, b=50),
+#         xaxis_rangeslider_visible=False,
+#     )
+#     # Convert the plot to a JSON string
+#     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+#     # # Determine the trend based on the moving average
+#     if df["Close"].iloc[-1] > df["ma_50"].iloc[-1]:
+#         trend = "bullish"
+#     else:
+#         trend = "bearish"
+
+#     # Recommend entry points, stop loss, and take profit based on the trend
+#     if trend == "bullish":
+#         entry_point = df["Close"].iloc[-1]
+#         stop_loss = entry_point - 0.005
+#         take_profit = entry_point + 0.01
+#     else:
+#         entry_point = df["Close"].iloc[-1]
+#         stop_loss = entry_point + 0.005
+#         take_profit = entry_point - 0.01
+
+#     context = {
+#         "win_pct":win_pct,
+#         "loss_pct":loss_pct,
+#         "win_rate": win_rate,
+#         "trades":trades,
+#         "trend": trend,
+#         "entry_point": entry_point,
+#         "stop_loss": stop_loss,
+#         "take_profit": take_profit,
+#         "total_profit_loss": total_profit_loss,
+#         "graphJSON": graphJSON,
+#     }
+#     return render(request, "forex/trend.html", context)

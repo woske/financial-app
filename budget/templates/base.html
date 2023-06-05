@@ -14,14 +14,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" /> 
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
   <link rel="stylesheet" type="text/css" href="{% static '/css/main.css' %}">
   <link rel="stylesheet" type="text/css" href="{% static '/js/main.js' %}">
 </head>
 <body class="skin-blue-black">
 	<div class="wrapper">
 		<header class="main-header col-lg-12">
-				<span class="logo-mid first border"><img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1818275/profile/profile-80.jpg?1520571742"/>Admin Pro</span>
+				<span class="logo-mid first border"><img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1818275/profile/profile-80.jpg?1520571742"/>Finance</span>
 				<div class="fa fa-bars" id="menu_bar"></div>
 				<!--<div class="fa fa-search" id="search_bar"></div> -->
 				<!--<div class="fa fa-gears" id="settings_bar"></div>-->
@@ -32,9 +32,9 @@
 				</div><!--
 				<div class="fa fa-flag-o" id="icon_bar">
 					<span class="label bg-red">4</span>
-				</div> 
+				</div>
 				<div class="fa fa-bell-o notification-icon" id="icon_bar">
-					<span class="label bg-orange">2</span> 
+					<span class="label bg-orange">2</span>
 				</div>
 				<div class="fa fa-envelope-o" id="icon_bar">
 					<span class="label bg-yellow">7</span>
@@ -113,12 +113,7 @@
             </li>
           </ul>
 				</li>
-				<li class="tooltip_nav point06">
-					<a href="#">
-					<i class="fa fa-envelope" aria-hidden="true"></i>
-					<span>MailBox</span>
-					</a>
-				</li>
+
 				<li class="{% if request.path == '/reports/' %}active{% endif %} tooltip_nav point07">
 					<a href="#" class="dropdown">
 					<i class="fa fa-th" aria-hidden="true"></i>
@@ -189,13 +184,13 @@
 					<p>Blocked<i class="bg-grey">+23</i></p>
 				</li>
 	    </div> -->
-      
+
       <div class="profile-hover">
         <div class="user-profile-icon fa fa-user-circle"></div>
         <div class="user-profile">
           <span class="">{{user.first_name}}{{user.last_name}}</span></br>
           <!--<span class="">Accountant</span>-->
-          	
+
         </div>
       </div>
 		<!--<nav class="navigation">
@@ -209,25 +204,25 @@
 				</li>
 			</div>
 		</nav>-->
-	  
+
 	 <div class="popup-overlay"></div>
-	<div class="popup-overlay-bell"></div>	 
+	<div class="popup-overlay-bell"></div>
 	</div>
 </body>
-  
+
 <script>
   $(document).ready(function () {
     document.querySelector("#menu_bar").onclick = function () {
       var element = document.querySelector(".leftMenu");
       element.classList.toggle("openMenu");
-  
+
       var closeAccordion = document.getElementsByClassName("dropdown");
       var i = 0;
       for (i = 0; i < closeAccordion.length; i++) {
         closeAccordion[i].classList.remove("active");
       }
     };
-  
+
     var dropdown = document.getElementsByClassName("dropdown");
     var i = 0;
     for (i = 0; i < dropdown.length; i++) {
@@ -235,48 +230,48 @@
         this.classList.toggle("active");
       };
     }
-  
+
     $("#menu_bar").click(function () {
       $(".main-header span:first").toggleClass("first border");
       $(".content-wrapper").toggleClass("content-wrapper-mid");
       $(".tooltip_nav p").toggleClass("hide");
     });
-  
+
     jQuery(function ($) {
       $("#settings_bar").click(function () {
         $(".navigation").toggleClass("open");
       });
     });
-  
+
     $("#color01").click(function () {
       $("body").addClass("skin-green");
     });
   });
-  
+
   $(document).ready(function () {
     $(".user-profile").on("click", function (e) {
       $(".profile-hover").toggle();
       $(".popup-overlay").toggle();
       e.preventDefault();
     });
-  
+
     $(".popup-overlay").click(function () {
       $(".popup-overlay").toggle();
       $(".profile-hover").toggle();
     });
-  
+
     $(".notification-icon").on("click", function (e) {
       $(".notification-hover").toggle();
       $(".popup-overlay-bell").toggle();
       e.preventDefault();
     });
-  
+
     $(".popup-overlay-bell").click(function () {
       $(".popup-overlay-bell").toggle();
       $(".notification-hover").toggle();
     });
   });
-  
+
   function toggleForm() {
   var formWrapper = document.getElementById("form-wrapper");
   formWrapper.style.display = formWrapper.style.display === "none" ? "block" : "none";
