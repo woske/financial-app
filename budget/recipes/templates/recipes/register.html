@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}Register - My Recipe App{% endblock %}
+
+{% block content %}
+<h2>Register</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Register</button>
+</form>
+{% endblock %}

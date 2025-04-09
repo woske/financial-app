@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}<h2>Create a Shared Recipe List</h2>{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    <label for="list_name">List Name:</label>
+    <input type="text" name="list_name" id="list_name" required><br>
+    <button type="submit">Create List</button>
+</form>
+
+
+{% endblock %}

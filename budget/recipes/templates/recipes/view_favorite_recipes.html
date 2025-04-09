@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}My Favorite Recipes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>My Favorite Recipes</h2>
+    {% if favorite_recipes %}
+        <div class="recipe-grid">
+            {% for favorite in favorite_recipes %}
+                <div class="recipe-card">
+                    {% if favorite.recipe.featured_image %}
+                        <img src="{{ favorite.recipe.featured_image }}" alt="{{ favorite.recipe.title }}" class="recipe-image">
+                    {% endif %}
+                    <div class="recipe-info">
+                        <h3>{{ favorite.recipe.title }}</h3>
+                        <a href="{% url 'view_recipe' favorite.recipe.id %}"></a> <!-- Makes the whole card clickable -->
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>You have no favorite recipes yet. <a href="{% url 'view_saved_recipes' %}">Browse recipes to add to your favorites.</a></p>
+    {% endif %}
+</div>
+{% endblock %}

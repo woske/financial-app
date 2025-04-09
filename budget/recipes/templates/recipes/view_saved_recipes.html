@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}My Saved Recipes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>My Saved Recipes</h2>
+
+    <!-- Search Form -->
+    <form method="get" action="{% url 'view_saved_recipes' %}" class="search-form">
+        <input type="text" name="q" placeholder="Search recipes..." value="{{ request.GET.q }}">
+        <button type="submit" class="btn-primary">Search</button>
+    </form>
+
+    <!-- Add New Recipe Box -->
+    <div class="recipe-grid">
+        <div class="add-new-card">
+            <h3>Add New Recipe</h3>
+            <p>Create a new recipe or add from a URL.</p>
+            <button class="btn-primary" id="openModal">Add Recipe</button>
+        </div>
+
+        <!-- Display saved recipes as cards -->
+        {% if saved_recipes %}
+            {% for recipe in saved_recipes %}
+                <div class="recipe-card">
+                    {% if recipe.featured_image %}
+                        <img src="{{ recipe.featured_image }}" alt="{{ recipe.title }}" class="recipe-image">
+                    {% endif %}
+                    <div class="recipe-info">
+                        <h3>{{ recipe.title }}</h3>
+                        <a href="{% url 'view_recipe' recipe.id %}"></a> <!-- Makes the whole card clickable -->
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You have no saved recipes. <a href="{% url 'scrape_recipe' %}">Add one now!</a></p>
+        {% endif %}
+    </div>
+
+    <!-- Modal Popup -->
+<!-- Initial Modal for selecting options -->
+<div id="recipeModal" class="modal">
+    <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <h2>Add a New Recipe</h2>
+        <button id="createNewRecipeButton" class="btn-primary">Create New Recipe</button>
+        <button id="enterUrlButton" class="btn-primary">Import from URL</button>
+    </div>
+</div>
+
+<!-- Secondary Modal for entering the URL -->
+<!-- Secondary Modal for entering the URL -->
+<div id="urlModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span id="closeUrlModal" class="close">&times;</span>
+        <h2>Enter Recipe URL</h2>
+        <form id="scrape-form" method="GET" action="{% url 'scrape_recipe' %}">
+            {% csrf_token %}
+            <input type="text" name="url" id="recipe-url" placeholder="Enter recipe URL" required>
+            <button type="submit">Fetch Recipe</button>
+        </form>
+    </div>
+</div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('recipeModal');
+        const openModalButton = document.getElementById('openModal');
+        const closeModalButton = document.getElementById('closeModal');
+    
+        // Open modal
+        openModalButton.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+    
+        // Close modal
+        closeModalButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    
+        // Close modal if clicking outside of modal content
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+    </script>
+{% endblock %}
+
+
+    

@@ -50,5 +50,6 @@ urlpatterns = [
     # path('trading/', track_trend, name='track_trend'),
     # path('train_model/', train_model_view, name='train_model'),
     # path('model_trained/', TemplateView.as_view(template_name='model/model_trained.html'), name='model_trained'),
-    path('admin/', admin.site.urls)
+    path('admin/', admin.site.urls),
+    path('recipes/', include('budget.recipes.urls')),
 ]

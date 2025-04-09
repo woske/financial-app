@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}Scrape a Recipe - My Recipe App{% endblock %}
+
+{% block content %}
+<div class="container recipe-view">
+
+    <h2 class="recipe-title">Scrape a New Recipe</h2>
+    <form id="scrape-form" method="post" action="{% url 'scrape_recipe' %}">
+        {% csrf_token %}
+        <input type="text" name="url" id="recipe-url" placeholder="Enter recipe URL" required>
+        <button type="submit" class="btn-primary">Fetch Recipe</button>
+    </form>
+
+    <div id="scraped-recipe" style="margin-top: 2rem;">
+        <!-- Image section -->
+        <div class="recipe-image-container">
+            <img id="scraped-image" src="" alt="Recipe Image" class="featured-image" style="display: none;" />
+        </div>
+
+        <!-- Header/title -->
+        <div class="recipe-header">
+            <h1 class="recipe-title" id="scraped-title"></h1>
+        </div>
+
+        <!-- Ingredients & Instructions -->
+        <div class="recipe-details">
+            <h2>Ingredients</h2>
+            <ul class="ingredients-list" id="scraped-ingredients"></ul>
+
+            <h2>Instructions</h2>
+            <ol class="instructions-list" id="scraped-instructions"></ol>
+        </div>
+
+        <!-- Save Recipe button -->
+        <div class="recipe-actions">
+            <button id="save-recipe" class="btn-primary" style="display: none;">Save Recipe</button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

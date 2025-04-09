@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Recipe App{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo">
+            <a href="#">My Recipes</a>
+            <button id="navToggle" class="nav-toggle">&#9776;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                {% if user.is_authenticated %}
+                <li><a href="/saved_recipes/">Saved Recipes</a></li>
+                <li><a href="/scrape_recipes/">Import Recipes</a></li>
+                <li><a href="/add_recipe/">Create Recipes</a></li>
+                <li><a href="/account/">Account</a></li>
+                <li><a href="/logout/">Logout</a></li>
+                {% else %}
+                <li><a href="/login/">Login</a></li>
+                <li><a href="/signup/">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}
+        <!-- Page content goes here -->
+        {% endblock %}
+    </main>
+</div>
+
+<script src="{% static 'recipes/app.js' %}"></script>
+</body>
+</html>

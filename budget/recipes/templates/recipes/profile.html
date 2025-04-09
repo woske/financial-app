@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}{{ user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ user.username }}'s Profile</h2>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Favorites:</strong> {{ user.favorites.count }} recipes</p>
+    <p><strong>Shared Lists:</strong> {{ user.shared_recipes.count }}</p>
+    <!-- Display more profile information here -->
+</div>
+{% endblock %}

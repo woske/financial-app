@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}Edit {{ recipe.title }}{% endblock %}
+
+{% block content %}
+<h2>Edit Recipe: {{ recipe.title }}</h2>
+<form method="post" action="{% url 'edit_recipe' recipe.id %}">
+    {% csrf_token %}
+    <label for="title">Title:</label>
+    <input type="text" name="title" value="{{ recipe.title }}" required><br>
+    <label for="ingredients">Ingredients:</label>
+    <textarea name="ingredients" required>{{ recipe.ingredients }}</textarea><br>
+    <label for="instructions">Instructions:</label>
+    <textarea name="instructions" required>{{ recipe.instructions }}</textarea><br>
+    <button type="submit">Save Changes</button>
+</form>
+<a href="{% url 'view_recipe' recipe.id %}">Cancel</a>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+
+{% block title %}My Recipe Books{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>My Recipe Books</h2>
+    <form method="post" action="{% url 'create_recipe_book' %}" class="create-book-form">
+        {% csrf_token %}
+        <input type="text" name="book_name" placeholder="New recipe book name" required>
+        <button type="submit" class="btn-primary">Create Recipe Book</button>
+    </form>
+
+    <div class="recipe-grid">
+        {% for book in recipe_books %}
+        <a href="{% url 'view_recipe_book' book.id %}" class="recipe-card"> <!-- Make the entire card clickable -->
+            <div class="recipe-card-content">
+                <h3>{{ book.name }}</h3>
+                <p>{{ book.recipes.count }} recipes</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

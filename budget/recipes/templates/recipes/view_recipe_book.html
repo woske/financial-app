@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block title %}{{ book.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ book.name }}</h2>
+    <p>{{ book.recipes.count }} recipes</p>
+
+    <div class="recipe-grid">
+        {% for recipe in recipes %}
+        <a href="{% url 'view_recipe' recipe.id %}" class="recipe-card">
+            {% if recipe.featured_image %}
+                <img src="{{ recipe.featured_image }}" alt="{{ recipe.title }}" class="recipe-image">
+            {% endif %}
+            <div class="recipe-info">
+                <h3>{{ recipe.title }}</h3>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

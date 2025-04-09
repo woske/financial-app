@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'recipes/styles.css' %}">
+<script src="{% static 'recipes/app.js' %}"></script>
+
+{% block content %}
+<div class="delete-account-container">
+    <h1>Delete Account</h1>
+    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+    <form method="POST" action="/account/delete/" class="form">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+    </form>
+    <a href="/account/" class="btn btn-secondary">Cancel</a>
+</div>
+{% endblock %}
