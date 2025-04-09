@@ -1,8 +1,7 @@
-
 {% extends 'base.html' %}
 
 {% block content %}
-<div id="form-wrapper">
+<div id="form-wrapper" style="display: none;">
     <form action="" method="get">
         <label for="start_date">Start Date:</label>
         <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}">
@@ -34,6 +33,14 @@
             <option value="amount" {% if sort == 'amount' %}selected{% endif %}>Amount (Ascending)</option>
         </select>
         <br><br>
+        <label for="items_per_page">Items Per Page:</label>
+        <select name="items_per_page" id="items_per_page" onchange="this.form.submit()">
+            <option value="50" {% if request.GET.items_per_page == '50' %}selected{% endif %}>50</option>
+            <option value="100" {% if request.GET.items_per_page == '100' %}selected{% endif %}>100</option>
+            <option value="200" {% if request.GET.items_per_page == '200' %}selected{% endif %}>200</option>
+            <option value="500" {% if request.GET.items_per_page == '500' %}selected{% endif %}>500</option>
+        </select>
+        <br><br>
         <input type="submit" value="Filter">
         <input type="hidden" name="page" value="{{ request.GET.page }}">
     </form>
@@ -41,7 +48,7 @@
 <button class="filter" onclick="toggleForm()">Filter</button>
 <br><br>
 
-<form action="" method="post" style="width:100%">
+<form id="transaction-form" action="" method="post" style="width:100%">
 {% csrf_token %}
 <input type="submit" value="Delete Selected Transactions" style="background-color:red;width:auto;margin-bottom:15px;">
 <table>
@@ -52,7 +59,7 @@
         <td><strong>${{ total_amount|floatformat:2|intcomma }}</strong></td>
     </tr>
     <tr>
-        <th>Select</th>
+        <th style="text-align: center;"><input type="checkbox" id="select-all"></th>
         <th>Account</th>
         <th>Date</th>
         <th>Description</th>
@@ -74,20 +81,43 @@
     </tr>
     {% endfor %}
 </table>
-{% if transactions.has_previous %}
-  <a href="?{{ request.GET.urlencode }}&page={{ transactions.previous_page_number }}">&laquo; Previous</a>
-{% endif %}
-{% if transactions.has_next %}
-  <a href="?{{ request.GET.urlencode }}&page={{ transactions.next_page_number }}">Next &raquo;</a>
-{% endif %}
-
+<div class="pagination">
+    {% if transactions.has_previous %}
+        <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ transactions.previous_page_number }}">&laquo; Previous</a>
+    {% endif %}
+    {% if transactions.has_next %}
+        <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ transactions.next_page_number }}">Next &raquo;</a>
+    {% endif %}
+</div>
 </form>
 <br><br>
 
-  
+<script>
+    function toggleForm() {
+        var formWrapper = document.getElementById("form-wrapper");
+        if (formWrapper.style.display === "none" || formWrapper.style.display === "") {
+            formWrapper.style.display = "block";
+        } else {
+            formWrapper.style.display = "none";
+        }
+    }
 
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.getElementsByName('transaction_ids');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
 
-
-
+    document.getElementById('transaction-form').onsubmit = function() {
+        var selectedCount = document.querySelectorAll('input[name="transaction_ids"]:checked').length;
+        if (selectedCount > 0) {
+            return confirm('You are going to delete ' + selectedCount + ' transactions. Do you want to proceed?');
+        } else {
+            alert('No transactions selected for deletion.');
+            return false;
+        }
+    }
+</script>
 
 {% endblock %}

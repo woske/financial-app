@@ -189,6 +189,7 @@ def view_transactions(request):
     accounts = Account.objects.filter(user=request.user)
     categories = Category.objects.filter(user=request.user)
     sort = request.GET.get('sort', None)
+    items_per_page = request.GET.get('items_per_page', '100')  # Default to 100
 
     if start_date and end_date:
         transactions = transactions.filter(date__range=(start_date, end_date))
@@ -207,7 +208,7 @@ def view_transactions(request):
     total_amount = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
 
     # Pagination
-    paginator = Paginator(transactions, 100) # Show 100 transactions per page
+    paginator = Paginator(transactions, items_per_page)  # Show 'items_per_page' transactions per page
     page = request.GET.get('page')
     transactions = paginator.get_page(page)
 
@@ -221,7 +222,15 @@ def view_transactions(request):
         # Redirect back to the same page
         return redirect(reverse('view_transactions') + '?' + request.GET.urlencode())
 
-    return render(request, 'finances/transactions.html', {'transactions': transactions, 'accounts': accounts, 'categories': categories, 'total_amount': total_amount, 'sort': sort})
+    return render(request, 'finances/transactions.html', {
+        'transactions': transactions,
+        'accounts': accounts,
+        'categories': categories,
+        'total_amount': total_amount,
+        'sort': sort,
+        'items_per_page': items_per_page,
+    })
+
 
 #edit transactions#
 @login_required
@@ -468,41 +477,34 @@ def budget_monthly(request):
     })
 
 
+from django.db.models import Q
 
 @login_required
 def compare_expenses(request):
     transactions = Transaction.objects.filter(user=request.user)
+    transfer_category = Category.objects.filter(name='[Transfer]').first()
+
+    if transfer_category:
+        transactions = transactions.exclude(category=transfer_category)
+
     year = request.GET.get('year')
     current_year = datetime.now().year
-    selected_year = year if year else current_year
-    if year:
-        transactions = transactions.filter(date__year=year)
-    else:
-        transactions = transactions.filter(date__year=current_year)
-    month_names = {1: 'January',
-                   2: 'February',
-                   3: 'March',
-                   4: 'April',
-                   5: 'May',
-                   6: 'June',
-                   7: 'July',
-                   8: 'August',
-                   9: 'September',
-                   10: 'October',
-                   11: 'November',
-                   12: 'December'}
+    selected_year = int(year) if year else current_year
+
+    transactions = transactions.filter(date__year=selected_year)
+
+    month_names = {1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June', 7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'}
 
     data = transactions.annotate(month=ExtractMonth('date')).values('month').annotate(
         expenses=Sum(Case(When(amount__lt=0, then=F('amount')*(-1)))),
         income=Sum(Case(When(amount__gt=0, then=F('amount'))))
     ).order_by('month')
 
-    # Replace month numbers with month names
     for item in data:
         item['month'] = month_names[item['month']]
 
     years = range(2018, current_year + 1)
-    context = {'data': data, 'year': year, 'selected_year': selected_year, 'years': years}
+    context = {'data': data, 'selected_year': selected_year, 'years': years}
     return render(request, 'reports/income-vs-expenses.html', context)
 
 
@@ -645,7 +647,33 @@ def analyze_transactions(request):
     }
     return render(request, 'finances/analyze.html', context)
 
+@login_required
+def category_spending_trends(request):
+    month = request.GET.get('month')
+    year = request.GET.get('year')
 
+    # Exclude transactions with the "Transfer" category
+    transfer_category = Category.objects.filter(name='[Transfer]').first()
+    base_query = Transaction.objects.filter(user=request.user)
+    if transfer_category:
+        base_query = base_query.exclude(category=transfer_category)
+
+    # Filter transactions by month and year if provided
+    if month and year:
+        base_query = base_query.filter(date__year=year, date__month=month)
+
+    expenses = base_query.filter(amount__lt=0).values('category__name').annotate(total_spent=Sum('amount')).order_by('category__name')
+    incomes = base_query.filter(amount__gt=0).values('category__name').annotate(total_received=Sum('amount')).order_by('category__name')
+
+    data = {
+        'expenses': list(expenses),
+        'incomes': list(incomes),
+    }
+    return JsonResponse(data)
+
+
+def view_category_spending_trends(request):
+    return render(request, 'reports/category.html')
 
 
 #####         TREND FOREX ##########
