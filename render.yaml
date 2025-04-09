@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: financial-app
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn budgetproject.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: budgetproject.settings
+      - key: SECRET_KEY
+        value: django-insecure-3qw=i^@_5nw_ct@3hzzb(n!zta%#jy%1vk@9_tyw#n05j$u(ik
+      - key: DEBUG
+        value: "False"
