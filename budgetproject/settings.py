@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import dj_database_url
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -86,7 +88,6 @@ WSGI_APPLICATION = 'budgetproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASE_URL = 'postgresql://uqyhiazmlrdgvfpglmew:eh9cq%40h._BD%23d4m@aws-0-ca-central-1.pooler.supabase.com:6543/postgres'
 
 
 DATABASES = {

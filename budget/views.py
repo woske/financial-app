@@ -133,13 +133,23 @@ def dashboard(request):
 
         data_json = json.dumps({'labels': labels, 'values': values})
 
-        accounts = Account.objects.filter(user=request.user)
-        for account in accounts:
+        all_accounts = Account.objects.filter(user=request.user)
+        grouped_accounts = {
+            'chequing': [],
+            'savings': [],
+            'credit': [],
+            'investment': [],
+            'crypto': [],
+        }
+
+        for account in all_accounts:
             account.update_balance()
+            grouped_accounts[account.account_type].append(account)
+        
 
         return render(request, 'accounts/dashboard.html', {
             'data_json': data_json,
-            'accounts': accounts
+            'grouped_accounts': grouped_accounts
         })
     else:
         return render(request, 'accounts/dashboard2.html')
@@ -384,9 +394,17 @@ def edit_account(request, pk):
 #Delete account#
 @login_required
 def delete_account(request, pk):
-    account = get_object_or_404(Account, pk=pk)
-    account.delete()
-    return redirect('view_accounts')
+    account = get_object_or_404(Account, pk=pk, user=request.user)
+
+    if request.method == 'POST':
+        # Delete related transactions first
+        Transaction.objects.filter(account=account).delete()
+        account.delete()
+        messages.success(request, f'Account "{account.name}" and its transactions have been deleted.')
+        return redirect('view_accounts')
+
+    return render(request, 'finances/delete_account.html', {'account': account})
+
 
 
 

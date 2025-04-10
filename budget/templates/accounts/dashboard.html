@@ -24,15 +24,36 @@
     {% endfor %}
   </tbody>
 </table> -->
-<div class="account-boxes">
-{% for account in accounts %}
-  <div class="account-box">
-      <h2>{{ account.name }}</h2>
-      {% load humanize %}
-      <p>${{ account.balance|floatformat:2|intcomma }}</p>
-  </div>
-{% endfor %}
+<div class="tabs">
+  <ul>
+    {% for key in grouped_accounts.keys %}
+      <li><a href="#{{ key }}">{{ key|capfirst }}</a></li>
+    {% endfor %}
+  </ul>
+  {% load humanize %}
+
+  {% for key, accounts in grouped_accounts.items %}
+    <div id="{{ key }}" class="tab-content">
+      {% for account in accounts %}
+      <div class="account-box">
+        <h2>{{ account.name }}</h2>
+        <p>${{ account.balance|floatformat:2|intcomma }}</p>
+      
+        {% if account.goal > 0 %}
+          <div class="goal-label">
+            {{ account.completion_percentage }}% of ${{ account.goal|floatformat:2|intcomma }} goal
+          </div>
+          <div class="progress-bar">
+            <div class="progress" style="width: {{ account.completion_percentage }}%"></div>
+          </div>
+        {% endif %}
+      </div>
+      
+      {% endfor %}
+    </div>
+  {% endfor %}
 </div>
+
 
 <!-- Chart container + toggle -->
 <div style="position: relative; width: 100%; height: 500px;">
@@ -129,6 +150,36 @@
     chart.update();
   });
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tabLinks = document.querySelectorAll(".tabs ul li a");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    function activateTab(tabId) {
+      tabContents.forEach(content => {
+        content.style.display = content.id === tabId ? "block" : "none";
+      });
+
+      tabLinks.forEach(link => {
+        link.parentElement.classList.toggle("active", link.getAttribute("href").substring(1) === tabId);
+      });
+    }
+
+    tabLinks.forEach(link => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        const tabId = this.getAttribute("href").substring(1);
+        activateTab(tabId);
+      });
+    });
+
+    // Activate first tab by default
+    if (tabLinks.length > 0) {
+      activateTab(tabLinks[0].getAttribute("href").substring(1));
+    }
+  });
+</script>
+
 
 
   

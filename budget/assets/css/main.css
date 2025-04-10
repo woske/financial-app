@@ -1212,3 +1212,104 @@ a.top_button {
   color: white;
   cursor: pointer;
 }
+
+/* Tabs Dashboard */
+
+.tabs ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  overflow-x: auto;
+  gap: 10px;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #ccc;
+}
+
+.tabs ul li {
+  margin: 0;
+}
+
+.tabs ul li a {
+  text-decoration: none;
+  padding: 10px 20px;
+  display: block;
+  background: #f0f0f0;
+  border-radius: 5px 5px 0 0;
+  color: #333;
+}
+
+.tabs ul li.active a {
+  background: #007bff;
+  color: #fff;
+}
+
+.tab-content {
+  display: none;
+  padding: 15px 0;
+}
+
+.account-box {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.account-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  margin-bottom: 1.25rem;
+  transition: transform 0.2s;
+  border-left: 6px solid #007bff;
+}
+
+.account-box:hover {
+  transform: translateY(-3px);
+}
+
+.account-box h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.account-box p {
+  margin: 0.5rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.progress-bar {
+  width: 100%;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+  height: 12px;
+}
+
+.progress {
+  background: #17a2b8;
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+}
+.goal-label {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 8px 0 4px;
+}
+
+@media screen and (max-width: 600px) {
+  .tabs ul {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .tabs ul li a {
+    padding: 8px 12px;
+  }
+}
