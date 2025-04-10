@@ -365,6 +365,7 @@ def create_account(request):
             account = form.save(commit=False)
             account.user = request.user
             account.save()
+            account.update_balance()
             return redirect('view_accounts')
     else:
         form = AccountForm()
