@@ -50,7 +50,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://financial-app-c7x6.onrender.com', 'https://financial-app-1-uh2a.onrender.com'
+]
+
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ROOT_URLCONF = 'budgetproject.urls'
 
@@ -85,11 +93,15 @@ DATABASES = {
 
 STATIC_URL = 'static/'
 
-STATIC_ROOT= '/home/baptiste/financial-app/assets'
+STATIC_URL = '/static/'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'budget/assets/'
+    BASE_DIR / 'budget/assets/',
 ]
+
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
