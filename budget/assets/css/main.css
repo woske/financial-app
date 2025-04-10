@@ -1247,7 +1247,7 @@ a.top_button {
 .tab-content {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  gap: 0 1rem;
   display: none; /* keep this for tabs to work */
 }
 

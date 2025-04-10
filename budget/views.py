@@ -21,7 +21,7 @@ from django.urls import reverse
 from decimal import Decimal
 from datetime import datetime, timedelta
 from dateutil.parser import parse
-from django.db.models.functions import TruncWeek
+from django.db.models.functions import TruncWeek, TruncMonth
 # import yfinance as yf
 # import matplotlib.pyplot as plt
 # import numpy as np
@@ -110,29 +110,40 @@ def delete_user(request):
 
 
 
-
+@login_required
 def dashboard(request):
     if request.user.is_authenticated:
+        # Calculate starting balance across all accounts
+        starting_balance = Account.objects.filter(user=request.user).aggregate(
+            total=Sum('starting_balance')
+        )['total'] or 0
+
+        # Fetch and group transactions by month
         data = Transaction.objects.filter(user=request.user).order_by('date')
-        cumulative_sum = 0
+        monthly_data = data.annotate(
+            month=TruncMonth('date')
+        ).values('month').annotate(
+            sum=Sum('amount')
+        ).order_by('month')
+
+        cumulative_sum = starting_balance
         labels = []
         values = []
 
-        monthly_data = data.annotate(
-            year=ExtractYear('date'),
-            month=ExtractMonth('date')
-        ).values('year', 'month').annotate(sum=Sum('amount')).order_by('year', 'month')
-
         for monthly_sum in monthly_data:
-            year = monthly_sum['year']
-            month = monthly_sum['month']
-            month_name = f'{year:04d}-{month:02d}'
+            month = monthly_sum['month'].strftime('%Y-%m')
             cumulative_sum += monthly_sum['sum']
-            labels.append(month_name)
+            labels.append(month)
             values.append(float(cumulative_sum))
+
+        # Add initial point if no transactions yet
+        if not labels:
+            labels.append("Start")
+            values.append(float(starting_balance))
 
         data_json = json.dumps({'labels': labels, 'values': values})
 
+        # Group accounts for tabs
         all_accounts = Account.objects.filter(user=request.user)
         grouped_accounts = {
             'chequing': [],
@@ -145,7 +156,6 @@ def dashboard(request):
         for account in all_accounts:
             account.update_balance()
             grouped_accounts[account.account_type].append(account)
-        
 
         return render(request, 'accounts/dashboard.html', {
             'data_json': data_json,
@@ -153,6 +163,7 @@ def dashboard(request):
         })
     else:
         return render(request, 'accounts/dashboard2.html')
+
     
 @login_required
 def weekly_net_data(request):
@@ -354,7 +365,6 @@ def create_account(request):
             account = form.save(commit=False)
             account.user = request.user
             account.save()
-            account.update_balance()
             return redirect('view_accounts')
     else:
         form = AccountForm()
