@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build script for Render
+set -o errexit  # stop if any command fails
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run database migrations
-python manage.py migrate --noinput
+# Run migrations
+python manage.py migrate
 
 # Collect static files
 python manage.py collectstatic --noinput
