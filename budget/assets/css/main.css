@@ -1215,6 +1215,7 @@ a.top_button {
 
 /* Tabs Dashboard */
 
+
 .tabs ul {
   display: flex;
   list-style: none;
@@ -1244,8 +1245,14 @@ a.top_button {
 }
 
 .tab-content {
-  display: none;
-  padding: 15px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  display: none; /* keep this for tabs to work */
+}
+
+.tab-content.active {
+  display: grid;
 }
 
 .account-box {
