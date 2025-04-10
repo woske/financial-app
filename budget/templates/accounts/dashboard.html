@@ -34,32 +34,103 @@
 {% endfor %}
 </div>
 
+<!-- Chart container + toggle -->
+<div style="position: relative; width: 100%; height: 500px;">
+  <canvas id="myChart"></canvas>
+</div>
 
-<canvas id="myChart" style="max-height:500px"></canvas>
+<!-- Chart.js core -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Zoom plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0"></script>
 
 <script>
-    var data = JSON.parse('{{ data_json|escapejs }}');
-    
-    var ctx = document.getElementById('myChart').getContext('2d');
-    
-    var chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: data.labels,
-        datasets: [{
-          label: 'Wealth over time',
-          data: data.values,
-          fill: false,
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.1
-        }]
+  var data = JSON.parse('{{ data_json|escapejs }}');
+
+  var ctx = document.getElementById('myChart').getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Wealth over time',
+        data: data.values,
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: 10
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
+      scales: {
+        x: {
+          ticks: {
+            font: { size: 12 }
+          },
+          grid: {
+            color: '#f0f0f0'
+          }
+        },
+        y: {
+          ticks: {
+            font: { size: 12 }
+          },
+          grid: {
+            color: '#f0f0f0'
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            font: { size: 14 }
+          }
+        },
+        tooltip: {
+          enabled: true,
+          bodyFont: { size: 13 },
+          titleFont: { size: 14 }
+        },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+          },
+          zoom: {
+            pinch: {
+              enabled: true
+            },
+            wheel: {
+              enabled: true
+            },
+            mode: 'x',
+          }
+        }
       }
-    });
-  </script>
+    }
+  });
+
+  // View toggle logic
+  document.getElementById('viewSelect').addEventListener('change', function () {
+    const view = this.value;
+
+    if (view === 'weekly') {
+      chart.data.labels = data.labels;
+      chart.data.datasets[0].data = data.values;
+    } else {
+      chart.data.labels = data.labels.slice(0, 4); // replace with actual monthly labels
+      chart.data.datasets[0].data = data.values.slice(0, 4); // replace with monthly values
+    }
+
+    chart.update();
+  });
+</script>
+
+
   
 
 

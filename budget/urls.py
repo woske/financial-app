@@ -18,7 +18,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from django.views.generic.base import TemplateView
 from .views import add_transaction, view_transactions, analyze_transactions, create_category, view_categories, import_expenses, register, create_account, view_accounts, edit_transaction, remove_transaction, edit_category, delete_category, edit_account, delete_account
-from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user, compare_expenses, logout_view, category_spending_trends, view_category_spending_trends
+from .views import budget_yearly, budget_monthly, profile, dashboard,login_view, recalculate_balances, delete_user, compare_expenses, logout_view, category_spending_trends, view_category_spending_trends, weekly_net_data
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
@@ -43,6 +43,7 @@ urlpatterns = [
     path('reports/monthly/', analyze_transactions, name='budget_monthly'),
     path('reports/income-vs-expenses/', compare_expenses, name='compare_expenses'),
     path('api/category-spending-trends/', category_spending_trends, name='category-spending-trends'),
+    path('api/weekly-data/', weekly_net_data, name='weekly_net_data'),
     path('reports/category/', view_category_spending_trends, name='view-category-spending-trends'),
     path('profile/', profile, name='profile'),
     path('recalculate_balances/', recalculate_balances, name='recalculate_balances'),

@@ -21,6 +21,7 @@ from django.urls import reverse
 from decimal import Decimal
 from datetime import datetime, timedelta
 from dateutil.parser import parse
+from django.db.models.functions import TruncWeek
 # import yfinance as yf
 # import matplotlib.pyplot as plt
 # import numpy as np
@@ -117,7 +118,11 @@ def dashboard(request):
         labels = []
         values = []
 
-        monthly_data = data.annotate(year=ExtractYear('date'), month=ExtractMonth('date')).values('year', 'month').annotate(sum=Sum('amount'))
+        monthly_data = data.annotate(
+            year=ExtractYear('date'),
+            month=ExtractMonth('date')
+        ).values('year', 'month').annotate(sum=Sum('amount')).order_by('year', 'month')
+
         for monthly_sum in monthly_data:
             year = monthly_sum['year']
             month = monthly_sum['month']
@@ -132,10 +137,26 @@ def dashboard(request):
         for account in accounts:
             account.update_balance()
 
-        return render(request, 'accounts/dashboard.html', {'data_json': data_json, 'accounts': accounts})
+        return render(request, 'accounts/dashboard.html', {
+            'data_json': data_json,
+            'accounts': accounts
+        })
     else:
         return render(request, 'accounts/dashboard2.html')
+    
+@login_required
+def weekly_net_data(request):
+    data = Transaction.objects.filter(user=request.user)
+    weekly_data = data.annotate(
+        week=TruncWeek('date')
+    ).values('week').annotate(
+        sum=Sum('amount')
+    ).order_by('week')
 
+    labels = [entry['week'].strftime('%Y-%m-%d') for entry in weekly_data]
+    values = [float(entry['sum']) for entry in weekly_data]
+
+    return JsonResponse({'labels': labels, 'values': values})
 
 
 #################        App Structure         #################
