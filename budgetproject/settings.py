@@ -86,6 +86,9 @@ WSGI_APPLICATION = 'budgetproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+DATABASE_URL = 'postgresql://uqyhiazmlrdgvfpglmew:eh9cq%40h._BD%23d4m@aws-0-ca-central-1.pooler.supabase.com:6543/postgres'
+
+
 DATABASES = {
     'default': dj_database_url.parse(
         os.environ.get("DATABASE_URL"),

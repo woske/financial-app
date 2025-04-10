@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+# Build script for Render
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run collectstatic
-python manage.py collectstatic --noinput
+# Run database migrations
+python manage.py migrate --noinput
 
-# Apply migrations
-python manage.py migrate
+# Collect static files
+python manage.py collectstatic --noinput
