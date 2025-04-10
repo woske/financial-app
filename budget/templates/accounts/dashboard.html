@@ -157,7 +157,7 @@
 
     function activateTab(tabId) {
       tabContents.forEach(content => {
-        content.style.display = content.id === tabId ? "block" : "none";
+        content.style.display = content.id === tabId ? "grid" : "none";
       });
 
       tabLinks.forEach(link => {

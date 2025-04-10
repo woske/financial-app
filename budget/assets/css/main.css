@@ -1271,6 +1271,7 @@ a.top_button {
   margin-bottom: 1.25rem;
   transition: transform 0.2s;
   border-left: 6px solid #007bff;
+  width: 100%;
 }
 
 .account-box:hover {
