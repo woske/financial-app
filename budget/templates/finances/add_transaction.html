@@ -2,35 +2,9 @@
 
 {% block content %}
 <form method="post">
-    {% csrf_token %}
-    <div>
-      <label for="date">Date:</label>
-      <input type="date" id="id_date" name="date">
-    </div>
-    <div>
-        <label for="account">Account:</label>
-        <select id="account" name="account">
-          {% for account in accounts %}
-            <option value="{{ account.name }}">{{ account.name }}</option>
-          {% endfor %}
-        </select>
-    </div>
-    <div>
-      <label for="description">Description:</label>
-      <input type="text" id="description" name="description">
-    </div>
-    <div>
-      <label for="amount">Amount:</label>
-      <input type="text" id="amount" name="amount">
-    </div>
-    <div>
-      <label for="category">Category:</label>
-      <select id="category" name="category">
-        {% for category in categories %}
-          <option value="{{ category.id }}">{{ category.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <button type="submit">Save</button>
-  </form>
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save</button>
+</form>
+
   {% endblock %}

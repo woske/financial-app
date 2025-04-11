@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Welcome to your finance dashboard</h1>
 
-<h2>Recent Transactions</h2>
+<h2>Accounts Overview</h2>
 <!-- <table>
   <thead>
     <tr>
@@ -56,7 +56,7 @@
 
 
 <!-- Chart container + toggle -->
-
+<h2>Wealth Overtime</h2>
 <div style="position: relative; width: 100%; height: 500px;">
   <canvas id="myChart"></canvas>
 </div>
@@ -151,35 +151,7 @@
     chart.update();
   });
 </script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const tabLinks = document.querySelectorAll(".tabs ul li a");
-    const tabContents = document.querySelectorAll(".tab-content");
 
-    function activateTab(tabId) {
-      tabContents.forEach(content => {
-        content.style.display = content.id === tabId ? "grid" : "none";
-      });
-
-      tabLinks.forEach(link => {
-        link.parentElement.classList.toggle("active", link.getAttribute("href").substring(1) === tabId);
-      });
-    }
-
-    tabLinks.forEach(link => {
-      link.addEventListener("click", function (e) {
-        e.preventDefault();
-        const tabId = this.getAttribute("href").substring(1);
-        activateTab(tabId);
-      });
-    });
-
-    // Activate first tab by default
-    if (tabLinks.length > 0) {
-      activateTab(tabLinks[0].getAttribute("href").substring(1));
-    }
-  });
-</script>
 
 
 

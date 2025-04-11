@@ -110,15 +110,24 @@ def delete_user(request):
 
 
 
+import yfinance as yf
+
 @login_required
 def dashboard(request):
     if request.user.is_authenticated:
-        # Calculate starting balance across all accounts
-        starting_balance = Account.objects.filter(user=request.user).aggregate(
-            total=Sum('starting_balance')
-        )['total'] or 0
+        # Start with normal account starting balances
+        accounts = Account.objects.filter(user=request.user)
+        starting_balance = Decimal(0)
 
-        # Fetch and group transactions by month
+        for account in accounts:
+            if account.account_type == 'crypto' and account.crypto_amount:
+                btc = yf.Ticker("BTC-CAD")
+                latest_price = btc.history(period="1d")["Close"].iloc[-1]
+                starting_balance += account.starting_balance + (Decimal(latest_price) * account.crypto_amount)
+            else:
+                starting_balance += account.starting_balance
+
+        # Fetch transactions grouped by month
         data = Transaction.objects.filter(user=request.user).order_by('date')
         monthly_data = data.annotate(
             month=TruncMonth('date')
@@ -126,9 +135,10 @@ def dashboard(request):
             sum=Sum('amount')
         ).order_by('month')
 
+        # Build the cumulative chart data
         cumulative_sum = starting_balance
-        labels = []
-        values = []
+        labels = ["Start"]
+        values = [float(starting_balance)]
 
         for monthly_sum in monthly_data:
             month = monthly_sum['month'].strftime('%Y-%m')
@@ -136,24 +146,11 @@ def dashboard(request):
             labels.append(month)
             values.append(float(cumulative_sum))
 
-        # Add initial point if no transactions yet
-        if not labels:
-            labels.append("Start")
-            values.append(float(starting_balance))
-
         data_json = json.dumps({'labels': labels, 'values': values})
 
-        # Group accounts for tabs
-        all_accounts = Account.objects.filter(user=request.user)
-        grouped_accounts = {
-            'chequing': [],
-            'savings': [],
-            'credit': [],
-            'investment': [],
-            'crypto': [],
-        }
-
-        for account in all_accounts:
+        # Group accounts by type
+        grouped_accounts = {'chequing': [], 'savings': [], 'credit': [], 'investment': [], 'crypto': []}
+        for account in accounts:
             account.update_balance()
             grouped_accounts[account.account_type].append(account)
 
@@ -183,40 +180,40 @@ def weekly_net_data(request):
 #################        App Structure         #################
 
 #Add Transactions#
-@login_required
+@login_required 
 def add_transaction(request):
     categories = Category.objects.filter(user=request.user)
     accounts = Account.objects.filter(user=request.user)
+
     if request.method == 'POST':
-        form = TransactionForm(request.POST)
+        form = TransactionForm(request.POST, category_choices=categories, account_choices=accounts)
         form.fields['date'].widget = forms.DateInput(attrs={'type': 'date'})
-        account_name = request.POST['account']
-        account = Account.objects.filter(name=account_name, user=request.user).first()
         if form.is_valid():
             transaction = form.save(commit=False)
             transaction.user = request.user
-            transaction.account = Account.objects.get(id=form.cleaned_data['account'])
+            transaction.account = form.cleaned_data['account']
             transaction.save()
-            return redirect('view_transactions')
-        else:
-            date = request.POST['date']
-            description = request.POST['description']
-            amount = request.POST['amount']
-            user = request.user
-            category = Category.objects.get(pk=request.POST['category'], user=request.user)
-            transaction = Transaction.objects.create(
-                date=date,
-                description=description,
-                amount=amount,
-                category=category,
-                account=account,
-                user=user
-            )
+
+            transfer_to = form.cleaned_data.get('transfer_to')
+            if transfer_to:
+                Transaction.objects.create(
+                    date=transaction.date,
+                    description=f"Transfer from {transaction.account.name}",
+                    amount=-transaction.amount,
+                    category=transaction.category,
+                    account=transfer_to,
+                    user=request.user
+                )
+
             return redirect('view_transactions')
     else:
-        form = TransactionForm()
-    return render(request, 'finances/add_transaction.html', {'form': form, 'categories': categories, 'accounts': accounts})
+        form = TransactionForm(category_choices=categories, account_choices=accounts)
 
+    return render(request, 'finances/add_transaction.html', {
+        'form': form,
+        'categories': categories,
+        'accounts': accounts,
+    })
 
 
 #View Transactions#

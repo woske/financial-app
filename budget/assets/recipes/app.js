@@ -201,3 +201,7 @@ function updateWakeLockButton() {
     const wakeLockToggle = document.getElementById('wake-lock-toggle');
     wakeLockToggle.innerText = wakeLockActive ? 'Disable Screen Lock' : 'Keep Screen On';
 }
+
+
+
+
