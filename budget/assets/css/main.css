@@ -388,7 +388,7 @@ html {
     text-transform: uppercase;
     font-size: 25px;
     position: fixed;
-    max-height: 100px;
+    max-height: 50px;
     z-index: 1060;
   }
   .main-header #icon_bar {
@@ -466,6 +466,7 @@ html {
   .logo-mid img {
     width: 100%;
     max-width: 50px;
+    margin-bottom: -16px;
   }
   .first {
     width: 170px;
@@ -660,6 +661,7 @@ html {
    */
   .skin-blue-black .main-header {
     background-color: #3181d2;
+    height: 50px;
   }
   .skin-blue-black .main-header .logo-mid {
     background-color: #0f56a6;
@@ -1235,13 +1237,15 @@ a.top_button {
   padding: 9px;
   text-decoration: none;
   background: green;
-  padding: 12px;
+  /* padding: 12px; */
   /* margin-top: 20px; */
   border-radius: 5px;
   border: none;
   background-color: #4CAF50;
   color: white;
   cursor: pointer;
+  max-height: 50px;
+  margin: auto;
 }
 
 /* Tabs Dashboard */

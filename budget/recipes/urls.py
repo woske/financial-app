@@ -30,4 +30,6 @@ urlpatterns = [
     path('recipe_books/<int:book_id>/', views.view_recipe_book, name='view_recipe_book'),
     path('recipe_books/<int:book_id>/remove/<int:recipe_id>/', views.remove_recipe_from_book, name='remove_recipe_from_book'),
     path('recipe_books/add/<int:recipe_id>/', views.add_recipe_to_book_from_view, name='add_recipe_to_book_from_view'),
+    path('recipe_books/<int:book_id>/edit/', views.edit_recipe_book, name='edit_recipe_book'),
+    path('recipe_books/<int:book_id>/delete/', views.delete_recipe_book, name='delete_recipe_book'),
 ]

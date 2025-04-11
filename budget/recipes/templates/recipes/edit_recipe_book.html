@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Edit Recipe Book Name</h2>
+  <form method="post">
+    {% csrf_token %}
+    <label for="book_name">New Name:</label>
+    <input type="text" id="book_name" name="book_name" value="{{ book.name }}" required>
+    <button type="submit">Save</button>
+    <a href="{% url 'view_recipe_book' book.id %}">Cancel</a>
+  </form>
+{% endblock %}

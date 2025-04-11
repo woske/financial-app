@@ -117,7 +117,6 @@ footer {
 .btn-secondary,
 .btn-danger {
     display: inline-block;
-    margin: 0.5rem 0;
     padding: 0.5rem 1.2rem;
     font-size: 0.9rem;
     color: #fff;
@@ -236,7 +235,6 @@ textarea {
 /* Styling for search input */
 input[type="text"], input[type="email"], input[type="password"] {
     width: 100%;
-    max-width: 400px;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     border: 2px solid #ddd;
@@ -322,7 +320,6 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focu
 button[type="submit"] {
     padding: 0.5rem 1.5rem;
     font-size: 1rem;
-    margin-left: 0.5rem;
     border: none;
     border-radius: 25px;
     background-color: #ff6347;

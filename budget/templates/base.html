@@ -14,7 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
   <link rel="stylesheet" type="text/css" href="{% static '/css/main.css' %}">
@@ -23,7 +23,7 @@
 <body class="skin-blue-black">
 	<div class="wrapper">
 		<header class="main-header col-lg-12">
-				<span class="logo-mid first border"><img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1818275/profile/profile-80.jpg?1520571742"/>Finance</span>
+				<span class="logo-mid first border"><img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1818275/profile/profile-80.jpg?1520571742"/>B&B</span>
 				<div class="fa fa-bars" id="menu_bar"></div>
 				<!--<div class="fa fa-search" id="search_bar"></div> -->
 				<!--<div class="fa fa-gears" id="settings_bar"></div>-->
@@ -46,7 +46,7 @@
       <ul class="leftMenuList">
         <li class="{% if request.path == '/' %}active{% endif %} tooltip_nav point01">
           <a href="{% url 'dashboard' %}">
-            <i class="fa fa-dashboard" aria-hidden="true"></i>
+            <i class="fa fa-solid fa-chart-line" aria-hidden="true"></i>
             <span>Dashboard</span>
           </a>
         </li>
@@ -58,7 +58,7 @@
         </li> -->
         <li class="{% if request.path == '/transactions/' %}active{% endif %} tooltip_nav point03">
           <a href="#" class="dropdown">
-            <i class="fa fa-table" aria-hidden="true"></i>
+            <i class="fa fa-solid fa-arrows-rotate" aria-hidden="true"></i>
             <span>Transactions</span>
           </a>
           <ul class="dropdownlist">
@@ -81,7 +81,7 @@
         </li>
 				<li class="{% if request.path == '/categories/' %}active{% endif %} tooltip_nav point04">
 					<a href="#" class="dropdown">
-					<i class="fa fa-building" aria-hidden="true"></i>
+					<i class="fa fa-solid fa-layer-group" aria-hidden="true"></i>
 					<span>Category</span>
 					</a>
           <ul class="dropdownlist">
@@ -99,7 +99,7 @@
 				</li>
 				<li class="{% if request.path == '/accounts/' %}active{% endif %} tooltip_nav point05">
 					<a href="#" class="dropdown">
-					<i class="fa fa-file" aria-hidden="true"></i>
+					<i class="fa fa-solid fa-wallet" aria-hidden="true"></i>
 					<span>Accounts</span>
 					</a>
           <ul class="dropdownlist">
@@ -118,7 +118,7 @@
 
 				<li class="{% if request.path == '/reports/' %}active{% endif %} tooltip_nav point07">
 					<a href="#" class="dropdown">
-					<i class="fa fa-th" aria-hidden="true"></i>
+					<i class="fa fa-solid fa-chart-pie" aria-hidden="true"></i>
 					<span>Reports</span>
 					</a>
           <ul class="dropdownlist">
@@ -139,9 +139,32 @@
             </li>
           </ul>
 				</li>
+        <li class="{% if request.path == '/reports/' %}active{% endif %} tooltip_nav point07">
+					<a href="#" class="dropdown">
+					<i class="fa fa-solid fa-utensils" aria-hidden="true"></i>
+					<span>Recipes</span>
+					</a>
+          <ul class="dropdownlist">
+            <li>
+              <a href="{% url 'view_saved_recipes' %}">
+                <span> All recipes</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'view_recipe_books' %}">
+                <span> Recipe Books</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'view_recipes' %}">
+                <span> Add Recipes from URL</span>
+              </a>
+            </li>
+          </ul>
+				</li>
 				<li class="tooltip_nav point08">
 					<a href="{% url 'profile' %}">
-					<i class="fa fa-gear" aria-hidden="true"></i>
+					<i class="fa fa-solid fa-gear" aria-hidden="true"></i>
 					<span>Settings</span>
 					</a>
 				</li>

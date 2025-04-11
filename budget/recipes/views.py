@@ -306,6 +306,27 @@ def remove_recipe_from_book(request, book_id, recipe_id):
     messages.info(request, f"{recipe.title} removed from {recipe_book.name}")
     return redirect('view_recipe_books')
 
+@login_required
+def edit_recipe_book(request, book_id):
+    book = get_object_or_404(RecipeBook, id=book_id, owner=request.user)
+    if request.method == 'POST':
+        new_name = request.POST.get('book_name')
+        if new_name:
+            book.name = new_name
+            book.save()
+            messages.success(request, "Recipe book name updated!")
+            return redirect('view_recipe_book', book_id=book.id)
+    return render(request, 'recipes/edit_recipe_book.html', {'book': book})
+
+@login_required
+def delete_recipe_book(request, book_id):
+    book = get_object_or_404(RecipeBook, id=book_id, owner=request.user)
+    if request.method == 'POST':
+        book.delete()
+        messages.success(request, "Recipe book deleted.")
+        return redirect('view_recipe_books')
+    return redirect('view_recipe_book', book_id=book.id)
+
 
 
 @login_required
