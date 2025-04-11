@@ -1166,6 +1166,37 @@ html {
     border: none !important;
   }
   
+  @media (min-width: 769px) {
+    .leftMenu {
+      display: block !important;
+    }
+  }
+  /* Hide sidebar by default on small screens */
+  @media (max-width: 768px) {
+    .leftMenu {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      height: 100%;
+      background: #fff;
+      overflow-y: auto;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+    
+  
+    .leftMenu.openMenu {
+      display: block;
+    }
+  
+    .content-wrapper {
+      margin: 0 10px;
+    }
+  }
+  
+
   @media (max-width: 860px) {
     .content-header > .breadcrumb {
       float: right;

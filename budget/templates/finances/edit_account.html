@@ -1,10 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Edit Account</h1>
-<form method="post">
+  <h2>Create Account</h2>
+  <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    
+    {{ form.name.label_tag }} {{ form.name }}
+    {{ form.account_type.label_tag }} {{ form.account_type }}
+    {{ form.starting_balance.label_tag }} {{ form.starting_balance }}
+    {{ form.goal.label_tag }} {{ form.goal }}
+
+
+    <div id="crypto-field-wrapper" style="display: none;">
+      {{ form.crypto_amount.label_tag }} {{ form.crypto_amount }}
+    </div>
+
     <button type="submit">Save</button>
-</form>
+  </form>
+  <script>
+    const accountTypeSelect = document.getElementById('id_account_type');
+    const cryptoFieldWrapper = document.getElementById('crypto-field-wrapper');
+
+    function toggleCryptoField() {
+      if (accountTypeSelect.value === 'crypto') {
+        cryptoFieldWrapper.style.display = 'block';
+      } else {
+        cryptoFieldWrapper.style.display = 'none';
+      }
+    }
+
+    accountTypeSelect.addEventListener('change', toggleCryptoField);
+    window.addEventListener('DOMContentLoaded', toggleCryptoField);
+  </script>
 {% endblock %}
