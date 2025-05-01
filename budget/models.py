@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
+from django.core.cache import cache
 
 
 
@@ -35,15 +36,18 @@ class Account(models.Model):
 
     def update_balance(self):
         if self.account_type == 'crypto' and self.crypto_amount:
-            import yfinance as yf
-            btc = yf.Ticker("BTC-CAD")
-            latest_price = btc.history(period="1d")["Close"].iloc[-1]
-            self.balance = self.starting_balance + (Decimal(latest_price) * self.crypto_amount)
+            try:
+                btc = yf.Ticker("BTC-CAD")
+                history = btc.history(period="1d")
+                latest_price = history["Close"].iloc[-1]
+                cache.set("btc_cad_price", float(latest_price), timeout=86400)  # Cache it
+            except Exception as e:
+                print(f"⚠ Error fetching BTC price in update_balance: {e}")
+                latest_price = cache.get("btc_cad_price", 0)  # Fallback to cached value
+
+            self.balance = self.starting_balance + Decimal(latest_price) * self.crypto_amount
         else:
-            transactions = Transaction.objects.filter(account=self)
-            credits = sum(t.amount for t in transactions if t.amount > 0)
-            debits = abs(sum(t.amount for t in transactions if t.amount < 0))
-            self.balance = self.starting_balance + credits - debits
+            self.balance = self.starting_balance
         self.save()
 
 
