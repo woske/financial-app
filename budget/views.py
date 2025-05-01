@@ -121,9 +121,19 @@ def dashboard(request):
 
         for account in accounts:
             if account.account_type == 'crypto' and account.crypto_amount:
-                btc = yf.Ticker("BTC-CAD")
-                latest_price = btc.history(period="1d")["Close"].iloc[-1]
-                starting_balance += account.starting_balance + (Decimal(latest_price) * account.crypto_amount)
+                try:
+                    btc = yf.Ticker("BTC-CAD")
+                    history = btc.history(period="1d")
+                    latest_price = history["Close"].iloc[-1]
+                    btc_value = Decimal(latest_price) * account.crypto_amount
+                except Exception as e:
+                    # Optional: fallback to a cached value or stored one
+                    print(f"⚠ Could not fetch BTC price: {e}")
+                    # You can choose to use a static fallback (like yesterday's close) or skip updating
+                    btc_value = Decimal(0)  # Or: account.last_known_btc_value * account.crypto_amount if stored
+
+                starting_balance += account.starting_balance + btc_value
+
             else:
                 starting_balance += account.starting_balance
 
