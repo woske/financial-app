@@ -575,40 +575,43 @@ def import_expenses(request):
             file = request.FILES['file']
             contents = file.read().decode('utf-8')
             reader = csv.DictReader(contents.splitlines())
+            updated_accounts = set()
 
             for row in reader:
                 account_name = row.get('Account')
                 date_str = row.get('Date')
+                description = row.get('Payee') or row.get('Memo') or ''
                 category_name = row.get('Category')
-                payment = row.get('PAYMENT', '').strip()
-                deposit = row.get('DEPOSIT', '').strip()
-                payee = row.get('Payee', '').strip()
-                memo = row.get('Memo', '').strip()
+                payment_str = row.get('PAYMENT')
+                deposit_str = row.get('DEPOSIT')
 
-                if not account_name or not date_str or not category_name:
-                    continue
-
-                # Determine amount
-                try:
-                    if payment:
-                        amount = -Decimal(payment.replace(',', ''))  # flip to negative
-                    elif deposit:
-                        amount = Decimal(deposit.replace(',', ''))
-                    else:
-                        continue  # Skip if no amount present
-                except decimal.InvalidOperation:
-                    continue
-
-                # Description
-                description = f"{payee} - {memo}".strip(" -")
+                if not all([account_name, date_str, category_name]):
+                    continue  # Skip incomplete rows
 
                 try:
                     date = parse(date_str, fuzzy=True).date()
                 except ValueError:
                     continue
 
-                account, _ = Account.objects.get_or_create(name=account_name, user=request.user)
-                category, _ = Category.objects.get_or_create(name=category_name, user=request.user)
+                try:
+                    account, _ = Account.objects.get_or_create(name=account_name, user=request.user)
+                except Exception:
+                    continue
+
+                try:
+                    category, _ = Category.objects.get_or_create(name=category_name, user=request.user)
+                except Exception:
+                    continue
+
+                try:
+                    if payment_str:
+                        amount = -Decimal(payment_str.strip().replace(',', ''))
+                    elif deposit_str:
+                        amount = Decimal(deposit_str.strip().replace(',', ''))
+                    else:
+                        continue
+                except decimal.InvalidOperation:
+                    continue
 
                 Transaction.objects.create(
                     date=date,
@@ -619,10 +622,17 @@ def import_expenses(request):
                     user=request.user
                 )
 
+                updated_accounts.add(account)
+
+            # Update balances once per account
+            for acc in updated_accounts:
+                acc.update_balance()
+
             return redirect('view_transactions')
     else:
         form = ImportExpensesForm()
     return render(request, 'finances/import.html', {'form': form})
+
 
 
 
