@@ -35,29 +35,21 @@ class Account(models.Model):
         return self.name
 
     def update_balance(self):
+        print(f"🧪 Updating balance for account: {self.name}")
     
         try:
-            # Base balance from starting balance and transactions
+            # Sum all transactions for this account
             transaction_total = Transaction.objects.filter(account=self).aggregate(Sum('amount'))['amount__sum'] or 0
+            print(f"🧮 Transaction total for {self.name}: {transaction_total}")
+    
+            # Final balance is starting + all transactions
             self.balance = self.starting_balance + transaction_total
-    
-            # For crypto: add current crypto value if applicable
-            if self.account_type == 'crypto' and self.crypto_amount:
-                try:
-                    btc = yf.Ticker("BTC-CAD")
-                    history = btc.history(period="1d")
-                    latest_price = history["Close"].iloc[-1]
-                    cache.set("btc_cad_price", float(latest_price), timeout=86400)
-                except Exception as e:
-                    print(f"⚠ Error fetching BTC price in update_balance: {e}")
-                    latest_price = cache.get("btc_cad_price", 0)
-    
-                self.balance += Decimal(latest_price) * self.crypto_amount
     
         except Exception as e:
             print(f"⚠ Error in update_balance(): {e}")
-
+    
         self.save()
+
 
 
     def completion_percentage(self):
