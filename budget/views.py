@@ -591,7 +591,7 @@ def import_expenses(request):
                 # Determine amount
                 try:
                     if payment:
-                        amount = Decimal('-' + payment.replace(',', ''))
+                        amount = -Decimal(payment.replace(',', ''))  # flip to negative
                     elif deposit:
                         amount = Decimal(deposit.replace(',', ''))
                     else:
@@ -623,8 +623,6 @@ def import_expenses(request):
     else:
         form = ImportExpensesForm()
     return render(request, 'finances/import.html', {'form': form})
-
-
 
 
 
