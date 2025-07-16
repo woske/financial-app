@@ -568,7 +568,6 @@ def compare_expenses(request):
 
 #CSV import Transactions#
 @login_required
-@login_required
 def import_expenses(request):
     if request.method == 'POST':
         form = ImportExpensesForm(request.POST, request.FILES)
@@ -624,7 +623,6 @@ def import_expenses(request):
     else:
         form = ImportExpensesForm()
     return render(request, 'finances/import.html', {'form': form})
-
 
 
 
