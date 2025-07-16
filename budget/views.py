@@ -568,6 +568,7 @@ def compare_expenses(request):
 
 #CSV import Transactions#
 @login_required
+@login_required
 def import_expenses(request):
     if request.method == 'POST':
         form = ImportExpensesForm(request.POST, request.FILES)
@@ -575,33 +576,40 @@ def import_expenses(request):
             file = request.FILES['file']
             contents = file.read().decode('utf-8')
             reader = csv.DictReader(contents.splitlines())
+
             for row in reader:
                 account_name = row.get('Account')
                 date_str = row.get('Date')
-                description = row.get('Description')
                 category_name = row.get('Category')
-                amount_str = row.get('Amount')
-                if not all([account_name, date_str, category_name, amount_str]):
-                    continue  # skip this row if any of the required data is missing
-                elif not description:
-                    description = ''  # set description to an empty string if it's missing
+                payment = row.get('PAYMENT', '').strip()
+                deposit = row.get('DEPOSIT', '').strip()
+                payee = row.get('Payee', '').strip()
+                memo = row.get('Memo', '').strip()
+
+                if not account_name or not date_str or not category_name:
+                    continue
+
+                # Determine amount
                 try:
-                    amount = Decimal(amount_str.strip().replace(',', ''))
+                    if payment:
+                        amount = Decimal('-' + payment.replace(',', ''))
+                    elif deposit:
+                        amount = Decimal(deposit.replace(',', ''))
+                    else:
+                        continue  # Skip if no amount present
                 except decimal.InvalidOperation:
-                    continue  # skip this row if the amount cannot be converted
+                    continue
+
+                # Description
+                description = f"{payee} - {memo}".strip(" -")
+
                 try:
                     date = parse(date_str, fuzzy=True).date()
                 except ValueError:
-                    continue  # skip this row if the date cannot be parsed
-                try:
-                    account = Account.objects.get(name=account_name, user=request.user)
-                except Account.DoesNotExist:
-                    account = Account.objects.create(name=account_name, user=request.user)
+                    continue
 
-                try:
-                    category = Category.objects.get(name=category_name, user=request.user)
-                except Category.DoesNotExist:
-                    category = Category.objects.create(name=category_name, user=request.user)
+                account, _ = Account.objects.get_or_create(name=account_name, user=request.user)
+                category, _ = Category.objects.get_or_create(name=category_name, user=request.user)
 
                 Transaction.objects.create(
                     date=date,
@@ -611,10 +619,12 @@ def import_expenses(request):
                     category=category,
                     user=request.user
                 )
+
             return redirect('view_transactions')
     else:
         form = ImportExpensesForm()
     return render(request, 'finances/import.html', {'form': form})
+
 
 
 
