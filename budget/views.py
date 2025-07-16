@@ -203,7 +203,10 @@ def add_transaction(request):
             transaction.user = request.user
             transaction.account = form.cleaned_data['account']
             transaction.save()
-
+        
+            # 💡 Recalculate balance after saving the transaction
+            transaction.account.update_balance()
+        
             transfer_to = form.cleaned_data.get('transfer_to')
             if transfer_to:
                 Transaction.objects.create(
@@ -214,8 +217,10 @@ def add_transaction(request):
                     account=transfer_to,
                     user=request.user
                 )
-
+                transfer_to.update_balance()  # 💡 Also update the receiving account
+        
             return redirect('view_transactions')
+
     else:
         form = TransactionForm(category_choices=categories, account_choices=accounts)
 
