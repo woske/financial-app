@@ -1,0 +1,39 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Import Cookbook</h1>
+    <p class="text-muted">Upload a PDF cookbook to extract recipes automatically.</p>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="cookbook_file" class="form-label">Select PDF Cookbook</label>
+                    <input type="file" class="form-control" id="cookbook_file" name="cookbook_file" accept=".pdf" required>
+                    <div class="form-text">Maximum file size: 50 MB. Only PDF files are supported.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload & Parse</button>
+            </form>
+        </div>
+    </div>
+    
+    {% if uploads %}
+    <h3>Previous Uploads</h3>
+    <div class="list-group">
+        {% for upload in uploads %}
+        <a href="{% url 'view_cookbook_drafts' upload.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ upload.file.name }}</strong>
+                <small class="text-muted d-block">{{ upload.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+            <span class="badge bg-{% if upload.status == 'completed' %}success{% elif upload.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                {{ upload.status }}
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
