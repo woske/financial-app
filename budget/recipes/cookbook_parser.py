@@ -1,0 +1,235 @@
+import re
+from typing import List, Tuple, Dict
+
+def extract_text_from_pdf(file_path: str) -> str:
+    """Extract text from PDF using pdfplumber, fallback to pypdf."""
+    text = ""
+    
+    try:
+        import pdfplumber
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n\n"
+    except Exception as e:
+        print(f"pdfplumber failed: {e}, trying pypdf...")
+        try:
+            from pypdf import PdfReader
+            reader = PdfReader(file_path)
+            for page in reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n\n"
+        except Exception as e2:
+            raise Exception(f"Both pdfplumber and pypdf failed: {e}, {e2}")
+    
+    return text
+
+
+def split_into_recipe_chunks(text: str) -> List[Dict]:
+    """
+    Split PDF text into recipe chunks by detecting 'Ingredients' headings.
+    Include ~300-500 chars above as title context.
+    """
+    # Pattern to find Ingredients headings
+    ingredients_pattern = re.compile(
+        r'(ingredients?)\s*[:\n]',
+        re.IGNORECASE
+    )
+    
+    matches = list(ingredients_pattern.finditer(text))
+    
+    if not matches:
+        # If no Ingredients heading found, treat entire text as one chunk
+        return [{
+            'title_guess': '',
+            'raw_text': text.strip(),
+        }]
+    
+    chunks = []
+    
+    for i, match in enumerate(matches):
+        start_pos = match.start()
+        
+        # Get context before (300-500 chars for title)
+        context_start = max(0, start_pos - 500)
+        title_context = text[context_start:start_pos]
+        
+        # Get content until next Ingredients heading or end
+        if i + 1 < len(matches):
+            end_pos = matches[i + 1].start() - 500  # Leave room for next title context
+            end_pos = max(match.end(), end_pos)
+        else:
+            end_pos = len(text)
+        
+        recipe_content = text[start_pos:end_pos]
+        
+        chunks.append({
+            'title_guess': extract_title_from_context(title_context),
+            'raw_text': (title_context + recipe_content).strip(),
+        })
+    
+    return chunks
+
+
+def extract_title_from_context(context: str) -> str:
+    """Extract title from the context before Ingredients heading."""
+    lines = context.strip().split('\n')
+    
+    # Work backwards to find a non-empty line that looks like a title
+    for line in reversed(lines):
+        line = line.strip()
+        # Skip empty lines, page numbers, very short lines
+        if len(line) < 3:
+            continue
+        if line.isdigit():
+            continue
+        # Skip lines that look like measurements or ingredient-like
+        if re.match(r'^[\d½¼¾⅓⅔⅛]+\s*(cup|tbsp|tsp|oz|lb|g|ml|kg)', line, re.IGNORECASE):
+            continue
+        
+        # Clean up potential title
+        title = line.strip()
+        # Remove common prefixes
+        title = re.sub(r'^(recipe|chapter|\d+[\.\):]?)\s*', '', title, flags=re.IGNORECASE)
+        
+        if len(title) > 2:
+            return title[:200]  # Limit title length
+    
+    return "Untitled Recipe"
+
+
+def parse_recipe_chunk(chunk: Dict) -> Dict:
+    """
+    Parse a recipe chunk to extract title, ingredients, and steps.
+    Returns parsed data with confidence score.
+    """
+    raw_text = chunk['raw_text']
+    title_guess = chunk.get('title_guess', '')
+    
+    # Parse ingredients
+    ingredients, ing_confidence = parse_ingredients(raw_text)
+    
+    # Parse steps/instructions
+    steps, steps_confidence = parse_steps(raw_text)
+    
+    # Refine title
+    parsed_title = title_guess if title_guess else extract_title_fallback(raw_text)
+    
+    # Calculate overall confidence
+    confidence = calculate_confidence(ingredients, steps, ing_confidence, steps_confidence)
+    
+    return {
+        'title_guess': title_guess,
+        'raw_text': raw_text,
+        'parsed_title': parsed_title,
+        'parsed_ingredients': ingredients,
+        'parsed_steps': steps,
+        'confidence': confidence,
+    }
+
+
+def parse_ingredients(text: str) -> Tuple[List[str], float]:
+    """Extract ingredients list from text."""
+    ingredients = []
+    confidence = 0.0
+    
+    # Find the Ingredients section
+    ing_match = re.search(
+        r'ingredients?\s*[:\n](.*?)(?=(?:instructions?|directions?|method|steps?|preparation)\s*[:\n]|$)',
+        text,
+        re.IGNORECASE | re.DOTALL
+    )
+    
+    if ing_match:
+        ing_section = ing_match.group(1)
+        confidence = 0.5
+        
+        # Split by newlines and clean up
+        lines = ing_section.strip().split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            # Skip empty lines
+            if not line:
+                continue
+            # Skip lines that look like section headers
+            if re.match(r'^(for the|ingredients?|notes?|tip:)', line, re.IGNORECASE):
+                continue
+            # Clean up bullet points and numbers
+            line = re.sub(r'^[\-•\*\d\.\)]+\s*', '', line)
+            
+            if len(line) > 1:
+                ingredients.append(line)
+        
+        if len(ingredients) >= 3:
+            confidence = 0.8
+        if len(ingredients) >= 5:
+            confidence = 1.0
+    
+    return ingredients, confidence
+
+
+def parse_steps(text: str) -> Tuple[List[str], float]:
+    """Extract cooking steps/instructions from text."""
+    steps = []
+    confidence = 0.0
+    
+    # Find the Instructions/Directions section
+    inst_match = re.search(
+        r'(?:instructions?|directions?|method|steps?|preparation)\s*[:\n](.*?)(?=(?:notes?|tips?|serving|nutrition)\s*[:\n]|$)',
+        text,
+        re.IGNORECASE | re.DOTALL
+    )
+    
+    if inst_match:
+        inst_section = inst_match.group(1)
+        confidence = 0.5
+        
+        # Try to split by numbered steps first
+        numbered_steps = re.findall(r'(?:^|\n)\s*\d+[\.\)]\s*(.+?)(?=(?:\n\s*\d+[\.\)]|\Z))', inst_section, re.DOTALL)
+        
+        if numbered_steps:
+            steps = [step.strip().replace('\n', ' ') for step in numbered_steps if step.strip()]
+            confidence = 0.9
+        else:
+            # Fallback to paragraph splitting
+            paragraphs = inst_section.strip().split('\n\n')
+            for para in paragraphs:
+                para = para.strip().replace('\n', ' ')
+                if len(para) > 10:
+                    steps.append(para)
+            
+            if steps:
+                confidence = 0.6
+    
+    if len(steps) >= 3:
+        confidence = min(confidence + 0.1, 1.0)
+    
+    return steps, confidence
+
+
+def extract_title_fallback(text: str) -> str:
+    """Fallback title extraction from first meaningful line."""
+    lines = text.strip().split('\n')
+    for line in lines[:10]:
+        line = line.strip()
+        if len(line) > 5 and not re.match(r'^(ingredients?|instructions?|directions?)', line, re.IGNORECASE):
+            return line[:200]
+    return "Untitled Recipe"
+
+
+def calculate_confidence(ingredients: List[str], steps: List[str], ing_conf: float, steps_conf: float) -> float:
+    """Calculate overall parsing confidence."""
+    if not ingredients and not steps:
+        return 0.0
+    
+    # Weighted average
+    score = (ing_conf * 0.5) + (steps_conf * 0.5)
+    
+    # Bonus for having both
+    if ingredients and steps:
+        score += 0.1
+    
+    return min(score, 1.0)
