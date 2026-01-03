@@ -1,30 +1,60 @@
 import re
 from typing import List, Tuple, Dict
 
-def extract_text_from_pdf(file_path: str) -> str:
-    """Extract text from PDF using pdfplumber, fallback to pypdf."""
-    text = ""
-    
+def extract_text_from_pdf(file_path: str, max_pages: int = 60, min_chars_to_accept: int = 1500) -> str:
+    """
+    Fast + Render-safe extraction.
+    1) Try pypdf first (lighter)
+    2) If it extracts almost nothing, try pdfplumber as fallback
+    3) Hard cap pages to avoid timeouts/OOM
+    """
+    parts: list[str] = []
+
+    # 1) pypdf first
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(file_path, strict=False)
+        for page in reader.pages[:max_pages]:
+            try:
+                page_text = page.extract_text() or ""
+            except Exception:
+                page_text = ""
+            if page_text.strip():
+                parts.append(page_text)
+        text = "\n\n".join(parts).strip()
+        if len(text) >= min_chars_to_accept:
+            return text
+    except Exception as e_pypdf:
+        text = ""
+        last_err = e_pypdf
+    else:
+        last_err = None
+
+    # 2) pdfplumber fallback (only if needed)
     try:
         import pdfplumber
+        parts = []
         with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n\n"
-    except Exception as e:
-        print(f"pdfplumber failed: {e}, trying pypdf...")
-        try:
-            from pypdf import PdfReader
-            reader = PdfReader(file_path)
-            for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n\n"
-        except Exception as e2:
-            raise Exception(f"Both pdfplumber and pypdf failed: {e}, {e2}")
-    
-    return text
+            for page in pdf.pages[:max_pages]:
+                try:
+                    page_text = page.extract_text() or ""
+                except Exception:
+                    page_text = ""
+                if page_text.strip():
+                    parts.append(page_text)
+        text2 = "\n\n".join(parts).strip()
+        if text2:
+            return text2
+    except Exception as e_plumber:
+        if last_err:
+            raise Exception(f"Both pypdf and pdfplumber failed: {last_err}, {e_plumber}")
+        raise Exception(f"pdfplumber failed: {e_plumber}")
+
+    # If both succeeded but produced nothing
+    if text:
+        return text
+    raise Exception("Could not extract any text from this PDF (might be scanned images/OCR needed).")
+
 
 
 def split_into_recipe_chunks(text: str) -> List[Dict]:
