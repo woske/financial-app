@@ -1,0 +1,62 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Recipe Drafts</h1>
+            <p class="text-muted mb-0">From: {{ upload.file.name }}</p>
+        </div>
+        <div>
+            <a href="{% url 'import_cookbook' %}" class="btn btn-outline-secondary">← Back to Uploads</a>
+            <form method="post" action="{% url 'delete_cookbook_upload' upload.id %}" class="d-inline" onsubmit="return confirm('Delete this upload and all drafts?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">Delete Upload</button>
+            </form>
+        </div>
+    </div>
+    
+    {% if upload.status == 'failed' %}
+    <div class="alert alert-danger">
+        <strong>Parsing failed:</strong> {{ upload.error_message }}
+    </div>
+    {% endif %}
+    
+    {% if drafts %}
+    <div class="row">
+        {% for draft in drafts %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 {% if draft.imported %}border-success{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ draft.parsed_title|default:"Untitled" }}</h5>
+                    
+                    <div class="mb-2">
+                        <span class="badge bg-{% if draft.confidence >= 0.8 %}success{% elif draft.confidence >= 0.5 %}warning{% else %}danger{% endif %}">
+                            Confidence: {{ draft.confidence|floatformat:0 }}%
+                        </span>
+                        {% if draft.imported %}
+                        <span class="badge bg-success">Imported</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="card-text text-muted small">
+                        {{ draft.raw_text|truncatewords:30 }}
+                    </p>
+                    
+                    <p class="mb-1"><strong>Ingredients:</strong> {{ draft.parsed_ingredients|length }} found</p>
+                    <p class="mb-2"><strong>Steps:</strong> {{ draft.parsed_steps|length }} found</p>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'view_recipe_draft' draft.id %}" class="btn btn-sm btn-primary">
+                        {% if draft.imported %}View{% else %}Review & Import{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">No recipes were found in this cookbook.</div>
+    {% endif %}
+</div>
+{% endblock %}
