@@ -36,5 +36,4 @@ urlpatterns = [
     path('import-cookbook/<int:upload_id>/', views.view_cookbook_drafts, name='view_cookbook_drafts'),
     path('import-cookbook/draft/<int:draft_id>/', views.view_recipe_draft, name='view_recipe_draft'),
     path('import-cookbook/<int:upload_id>/delete/', views.delete_cookbook_upload, name='delete_cookbook_upload'),
-
 ]
