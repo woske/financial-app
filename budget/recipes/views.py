@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login, logout, authenticate,update_session_auth_hash
 from django.contrib import messages
-from .models import Recipe, SharedRecipeList, Comment, UserFavoriteRecipe, RecipeBook
+from .models import Recipe, SharedRecipeList, Comment, UserFavoriteRecipe, RecipeBook, CookbookUpload, RecipeDraft
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -11,6 +11,11 @@ from recipe_scrapers import SCRAPERS
 from .custom_scrapers import CustomScraper
 import requests
 import traceback
+import json
+import os
+from django.core.files.storage import default_storage
+from django.conf import settings
+
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
@@ -275,7 +280,7 @@ def view_recipe_book(request, book_id):
 def add_recipe_to_book(request, book_id):
     if request.method == 'POST':
         recipe_id = request.POST.get('recipe_id')  # Get recipe_id from POST data
-        book = get_object_or_404(RecipeBook, id=book_id, user=request.user)
+        book = get_object_or_404(RecipeBook, id=book_id, owner=request.user)
         recipe = get_object_or_404(Recipe, id=recipe_id, owner=request.user)
         book.recipes.add(recipe)
         return redirect('view_recipe_books')
@@ -300,7 +305,7 @@ def add_recipe_to_book_from_view(request, recipe_id):
 
 @login_required
 def remove_recipe_from_book(request, book_id, recipe_id):
-    recipe_book = get_object_or_404(RecipeBook, id=book_id, owner=request.user, is_recipe_book=True)
+    recipe_book = get_object_or_404(RecipeBook, id=book_id, owner=request.user)
     recipe = get_object_or_404(Recipe, id=recipe_id)
     recipe_book.recipes.remove(recipe)
     messages.info(request, f"{recipe.title} removed from {recipe_book.name}")
@@ -453,3 +458,196 @@ def view_favorite_recipes(request):
         print(f"Recipe: {favorite.recipe.title}, Image URL: {favorite.recipe.featured_image}")
     
     return render(request, 'recipes/view_favorite_recipes.html', {'favorite_recipes': favorite_recipes})
+
+# ============================================
+# COOKBOOK IMPORT VIEWS
+# ============================================
+
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
+@login_required
+def import_cookbook(request):
+    """Upload a cookbook PDF for parsing."""
+    if request.method == 'POST':
+        uploaded_file = request.FILES.get('cookbook_file')
+        
+        if not uploaded_file:
+            messages.error(request, "Please select a file to upload.")
+            return redirect('import_cookbook')
+        
+        # Validate file type
+        if not uploaded_file.name.lower().endswith('.pdf'):
+            messages.error(request, "Only PDF files are supported.")
+            return redirect('import_cookbook')
+        
+        # Validate file size
+        if uploaded_file.size > MAX_UPLOAD_SIZE:
+            messages.error(request, f"File too large. Maximum size is {MAX_UPLOAD_SIZE // (1024*1024)} MB.")
+            return redirect('import_cookbook')
+        
+        # Create upload record
+        upload = CookbookUpload.objects.create(
+            owner=request.user,
+            file=uploaded_file,
+            status='processing'
+        )
+        
+        try:
+            # Get the file path
+            file_path = upload.file.path
+            
+            # Import the parser
+            from .cookbook_parser import extract_text_from_pdf, split_into_recipe_chunks, parse_recipe_chunk
+            
+            # Extract text from PDF
+            text = extract_text_from_pdf(file_path)
+            
+            if not text.strip():
+                raise Exception("Could not extract any text from the PDF.")
+            
+            # Split into recipe chunks
+            chunks = split_into_recipe_chunks(text)
+            
+            # Parse each chunk and create drafts
+            for chunk in chunks:
+                parsed = parse_recipe_chunk(chunk)
+                RecipeDraft.objects.create(
+                    upload=upload,
+                    title_guess=parsed['title_guess'],
+                    raw_text=parsed['raw_text'],
+                    parsed_title=parsed['parsed_title'],
+                    parsed_ingredients=parsed['parsed_ingredients'],
+                    parsed_steps=parsed['parsed_steps'],
+                    confidence=parsed['confidence'],
+                )
+            
+            upload.status = 'completed'
+            upload.save()
+            
+            messages.success(request, f"Successfully parsed {len(chunks)} recipe(s) from the cookbook!")
+            return redirect('view_cookbook_drafts', upload_id=upload.id)
+            
+        except Exception as e:
+            upload.status = 'failed'
+            upload.error_message = str(e)
+            upload.save()
+            messages.error(request, f"Error processing cookbook: {str(e)}")
+            return redirect('import_cookbook')
+    
+    # GET request - show upload form
+    user_uploads = CookbookUpload.objects.filter(owner=request.user).order_by('-created_at')[:10]
+    return render(request, 'recipes/import_cookbook.html', {'uploads': user_uploads})
+
+
+@login_required
+def view_cookbook_drafts(request, upload_id):
+    """View all recipe drafts from a cookbook upload."""
+    upload = get_object_or_404(CookbookUpload, id=upload_id, owner=request.user)
+    drafts = upload.drafts.all().order_by('-confidence', 'id')
+    
+    return render(request, 'recipes/view_cookbook_drafts.html', {
+        'upload': upload,
+        'drafts': drafts,
+    })
+
+
+@login_required
+def view_recipe_draft(request, draft_id):
+    """View and edit a single recipe draft, with option to import."""
+    draft = get_object_or_404(RecipeDraft, id=draft_id, upload__owner=request.user)
+    recipe_books = RecipeBook.objects.filter(owner=request.user)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'save_draft':
+            # Update draft with edited values
+            draft.parsed_title = request.POST.get('title', draft.parsed_title)
+            
+            # Parse ingredients from textarea (one per line)
+            ingredients_text = request.POST.get('ingredients', '')
+            draft.parsed_ingredients = [line.strip() for line in ingredients_text.split('\n') if line.strip()]
+            
+            # Parse steps from textarea (one per line or numbered)
+            steps_text = request.POST.get('steps', '')
+            draft.parsed_steps = [line.strip() for line in steps_text.split('\n') if line.strip()]
+            
+            draft.save()
+            messages.success(request, "Draft saved successfully!")
+            return redirect('view_recipe_draft', draft_id=draft.id)
+        
+        elif action == 'import':
+            if draft.imported:
+                messages.warning(request, "This recipe has already been imported.")
+                return redirect('view_recipe_draft', draft_id=draft.id)
+            
+            # Convert ingredients list to text
+            ingredients_text = '\n'.join(draft.parsed_ingredients) if draft.parsed_ingredients else ''
+            
+            # Convert steps to numbered text
+            steps_text = ''
+            if draft.parsed_steps:
+                for i, step in enumerate(draft.parsed_steps, 1):
+                    steps_text += f"{i}. {step}\n"
+            
+            # Create the real Recipe
+            recipe = Recipe.objects.create(
+                title=draft.parsed_title or "Imported Recipe",
+                ingredients=ingredients_text,
+                instructions=steps_text,
+                owner=request.user,
+            )
+            
+            # Mark draft as imported
+            draft.imported = True
+            draft.imported_recipe = recipe
+            draft.save()
+            
+            # Handle recipe book assignment
+            book_id = request.POST.get('recipe_book')
+            new_book_name = request.POST.get('new_book_name', '').strip()
+            
+            if new_book_name:
+                # Create a new book
+                book = RecipeBook.objects.create(name=new_book_name, owner=request.user)
+                book.recipes.add(recipe)
+                messages.success(request, f"Recipe imported and added to new book '{new_book_name}'!")
+            elif book_id:
+                # Add to existing book
+                try:
+                    book = RecipeBook.objects.get(id=book_id, owner=request.user)
+                    book.recipes.add(recipe)
+                    messages.success(request, f"Recipe imported and added to '{book.name}'!")
+                except RecipeBook.DoesNotExist:
+                    messages.success(request, "Recipe imported successfully!")
+            else:
+                messages.success(request, "Recipe imported successfully!")
+            
+            return redirect('view_recipe', recipe_id=recipe.id)
+    
+    # Prepare data for template
+    ingredients_text = '\n'.join(draft.parsed_ingredients) if draft.parsed_ingredients else ''
+    steps_text = '\n'.join(draft.parsed_steps) if draft.parsed_steps else ''
+    
+    return render(request, 'recipes/view_recipe_draft.html', {
+        'draft': draft,
+        'ingredients_text': ingredients_text,
+        'steps_text': steps_text,
+        'recipe_books': recipe_books,
+    })
+
+
+@login_required
+def delete_cookbook_upload(request, upload_id):
+    """Delete a cookbook upload and all its drafts."""
+    upload = get_object_or_404(CookbookUpload, id=upload_id, owner=request.user)
+    
+    if request.method == 'POST':
+        # Delete the file from storage
+        if upload.file:
+            upload.file.delete(save=False)
+        upload.delete()
+        messages.success(request, "Cookbook upload deleted.")
+        return redirect('import_cookbook')
+    
+    return redirect('view_cookbook_drafts', upload_id=upload_id)
